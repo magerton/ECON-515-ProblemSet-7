@@ -137,11 +137,9 @@ E[y_1 | x,z,s=1]
 &= \delta_1 + \beta_1 x + \alpha_1 \frac{(\alpha_1 - \alpha_0 - \alpha_c)\sigma^2_\theta}{\sigma^*} \underbrace{\frac{\phi(t)}{1-\Phi(t)}}_{\lambda_1} \\
 &= \delta_1 + \beta_1 x + \alpha_1 \left( \rho_{\eta\theta}\sigma_\theta \right) \lambda_{1i} \\
 \end{align*}
-A probit first-step has given us $\left\{ (\delta_1 - \delta_0 -\gamma_0)/\sigma_c, (\beta_1 - \beta_0 - \gamma_3)\sigma_c), \gamma_2/\sigma_c, (\alpha_1 - \alpha_0 - \alpha_c)\sigma_c\right\}$. With the second step, we now get $\{\delta_1, \delta_0, \beta_1, \beta_0\}$ and the ratio $\alpha_1/\alpha_2$. We can back out $\{\sigma_c, \gamma_0, \gamma_2, \gamma_3\}$ from the original probit equations. We have 3 $\alpha$s and only 2 equations for them, so those aren't identified. We can now turn to variances and covariances. Recall
+A probit first-step has given us $\left\{ (\delta_1 - \delta_0 -\gamma_0)/\sigma_c, (\beta_1 - \beta_0 - \gamma_3)\sigma_c), \gamma_2/\sigma_c \right\}$. With the second step, we now get $\{\delta_1, \delta_0, \beta_1, \beta_0\}$ and the ratio $\alpha_1/\alpha_0$. We can back out $\{\sigma_c, \gamma_0, \gamma_2, \gamma_3\}$ from the original probit equations. We also get the quantity $(\alpha_1 - \alpha_0 - \alpha_c)\sigma^2_\theta$ since we have $\sigma_c^2$. However, we have 3 $\alpha$s and only 2 equations for them, so those aren't identified. We can now turn to variances and covariances. Recall
 \[
-\rho_{\eta\theta} = \frac{(\alpha_1 - \alpha_0 - \alpha_c)\sigma^2_\theta}{\sigma^{*}\sigma_\theta}
-\qquad \text{and} \qquad
-\sigma^{*2} = (\alpha_1 - \alpha_0 - \alpha_c)^2\sigma^2_\theta + \sigma^2_c
+\rho_{\eta\theta}\sigma_\theta = \frac{(\alpha_1 - \alpha_0 - \alpha_c)\sigma^2_\theta}{(\alpha_1 - \alpha_0 - \alpha_c)^2\sigma^2_\theta + \sigma^2_c}
 \]
 It is clear to see that these are of little help since we have a bunch of parameters in the euqations for the variances: 
 \begin{align*}
@@ -151,9 +149,18 @@ It is clear to see that these are of little help since we have a bunch of parame
 %	&= \alpha_0^2 \frac{(\alpha_1 - \alpha_0 - \alpha_c)\sigma^2_\theta}{\sqrt{(\alpha_1 - \alpha_0 - \alpha_c)^2\sigma_\theta^2 + \sigma_0^2}} + \sigma_\theta^2 \left(1 - \frac{(\alpha_1 - \alpha_0 - \alpha_c)^2\sigma^4_\theta}{\sigma_0^2 \left[(\alpha_1 - \alpha_0 - \alpha_c)^2\sigma_\theta^2 + \sigma_0^2 \right]} \right) \\
 \Var (Y_1| \eta\geq -t ) &= \alpha_1^2 \Var\left(\theta\middle| \eta \geq t\right) + \sigma^2_1 
 \end{align*}
-Fortunately, with the measurement equations, we can say things.
-
-
+Fortunately, with the measurement equations, we can say things. Recall $I=E[Y_1 - Y_0 - C|X,Z,\theta]$. \textbf{I have no idea what to do with the last 2 eqns b/c how do we compute $I$ w/ out $\theta$ ??}
+\begin{align*}
+\Cov(Y_0 - \beta_0 X, M^A - X^M\beta_A) &= \alpha_0 \sigma^2_\theta \\
+\Cov(Y_0 - \beta_0 X, M^B - X^M\beta_B) &= \alpha_0 \alpha_B \sigma^2_\theta \\
+\Cov(Y_1 - \beta_1 X, M^A - X^M\beta_A) &= \alpha_1 \sigma^2_\theta \\
+\Cov(Y_1 - \beta_1 X, M^B - X^M\beta_B) &= \alpha_1 \alpha_B \sigma^2_\theta \\
+\Cov\left[I - \widetilde \delta - \widetilde \beta x -\gamma_2 z,\; \left(M^A - X^M\beta_A \right)\right]
+	&= (\alpha_1 - \alpha_0 - \alpha_c) \sigma^2_\theta \\
+\Cov\left[I - \widetilde \delta - \widetilde \beta x -\gamma_2 z,\; \left(M^B - X^M\beta_B \right)\right]
+	&= (\alpha_1 - \alpha_0 - \alpha_c) \alpha_B \sigma^2_\theta
+\end{align*}
+The top four equations give us two measurements for $\alpha_B$. We also use the first and third along with $\rho \sigma_\theta$ to get $\alpha_c \sigma^2_\theta$. We are still not able to pull apart $\alpha_0/\alpha_1$, which means we are having trouble getting $\sigma^2_\theta$ and $\sigma^2_{k}$.
 \subsection{MLE approach}
 
 The contribution to the likelihood of any given individual $i$ is now the product of the likelihood of the wage and choice times the product of the likelihoods of the test equations.
@@ -179,8 +186,6 @@ Define $q_i \equiv 2s_i - 1$. Since we only observe $y_{1i}$ or $y_{i0}$, we sim
 \end{align*}
 
 
-\section{Histograms}
-\begin{landscape}
 \begin{figure}[h]
 	\centering
 	\begin{subfigure}[b]{0.3\textwidth}\centering \includegraphics[width=1\textwidth]{x}  \end{subfigure}
@@ -190,9 +195,8 @@ Define $q_i \equiv 2s_i - 1$. Since we only observe $y_{1i}$ or $y_{i0}$, we sim
     \begin{subfigure}[b]{0.3\textwidth}\centering \includegraphics[width=1\textwidth]{mb} \end{subfigure}
     \begin{subfigure}[b]{0.3\textwidth}\centering \includegraphics[width=1\textwidth]{xm} \end{subfigure}
     \begin{subfigure}[b]{0.3\textwidth}\centering \includegraphics[width=1\textwidth]{y} \end{subfigure}    
-    \caption{Plots}		
+    \caption{Histograms}		
 \end{figure}	
-\end{landscape}
 
 
 \end{document}
