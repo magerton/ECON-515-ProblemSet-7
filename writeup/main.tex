@@ -54,7 +54,7 @@ Also define the utility shifter function $C$ and an index function $I$
 \begin{align*}
 C &= \gamma_0 + \gamma_2 z + \gamma_3 x + \alpha_C \theta  \\
 I &= E[y_1 - y_0 - C|\F]  \\
-  &= \underbrace{(\delta_1 - \delta_0 - \gamma_0)}_{\widetilde \delta} + \underbrace{(\beta_0 - \beta_1 - \gamma_3)}_{\widetilde \beta} x_i - \gamma_2 z + \underbrace{(\alpha_1 - 1- \alpha_C)}_{\widetilde \alpha} \theta - \epsilon_{c}
+  &= \underbrace{(\delta_1 - \delta_0 - \gamma_0)}_{\widetilde \delta} + \underbrace{(\beta_1 - \beta_0 - \gamma_3)}_{\widetilde \beta} x_i - \gamma_2 z + \underbrace{(\alpha_1 - 1- \alpha_C)}_{\widetilde \alpha} \theta - \epsilon_{c}
 \end{align*}
 The distribution of shocks is
 \[
@@ -137,7 +137,7 @@ E[y_1 | x,z,s=1]
 &= \delta_1 + \beta_1 x + \alpha_1 \frac{(\alpha_1 - \alpha_0 - \alpha_c)\sigma^2_\theta}{\sigma^*} \underbrace{\frac{\phi(t)}{1-\Phi(t)}}_{\lambda_1} \\
 &= \delta_1 + \beta_1 x + \alpha_1 \left( \rho_{\eta\theta}\sigma_\theta \right) \lambda_{1i} \\
 \end{align*}
-A probit first-step has given us $\left\{ (\delta_1 - \delta_0 -\gamma_0)/\sigma_c, (\beta_1 - \beta_0 - \gamma_3)\sigma_c), \gamma_2/\sigma_c \right\}$. With the second step, we now get $\{\delta_1, \delta_0, \beta_1, \beta_0\}$ and the ratio $\alpha_1/\alpha_0$. We can back out $\{\sigma_c, \gamma_0, \gamma_2, \gamma_3\}$ from the original probit equations. We also get the quantity $(\alpha_1 - \alpha_0 - \alpha_c)\sigma^2_\theta$ since we have $\sigma_c^2$. However, we have 3 $\alpha$s and only 2 equations for them, so those aren't identified. We can now turn to variances and covariances. Recall
+A probit first-step has given us $\left\{ (\delta_1 - \delta_0 -\gamma_0)/\sigma_c, (\beta_1 - \beta_0 - \gamma_3)\sigma_c), \gamma_2/\sigma_c \right\}$. With the second step, we now get $\{\delta_1, \delta_0, \beta_1, \beta_0\}$ and the ratio $\alpha_1/\alpha_0$. We can back out {\color{red} How?} $\{\sigma_c, \gamma_0, \gamma_2, \gamma_3\}$ from the original probit equations. We also get the quantity $(\alpha_1 - \alpha_0 - \alpha_c)\sigma^2_\theta$ since we have $\sigma_c^2$. However, we have 3 $\alpha$s and only 2 equations for them, so those aren't identified. We can now turn to variances and covariances. Recall
 \[
 \rho_{\eta\theta}\sigma_\theta = \frac{(\alpha_1 - \alpha_0 - \alpha_c)\sigma^2_\theta}{(\alpha_1 - \alpha_0 - \alpha_c)^2\sigma^2_\theta + \sigma^2_c}
 \]
@@ -205,5 +205,3 @@ Define $q_i \equiv 2s_i - 1$. Since we only observe $y_{1i}$ or $y_{i0}$, we sim
 
 
 \end{document}
-
-
