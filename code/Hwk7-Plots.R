@@ -1,10 +1,10 @@
 rm    (list=ls())
 
 # mydir = "C:/Users/magerton/OneDrive/"
-mydir = "C:/mja3/SkyDrive/"
-# mydir = "/Users/magerton/OneDrive/"
+# mydir = "C:/mja3/SkyDrive/"
+mydir = "/Users/magerton/OneDrive/"
 
-setwd (paste(mydir, "Rice/Class/econ 515 - Labor/PS7/code", sep=""))
+setwd (paste(mydir, "Rice/Class/econ515-Labor/PS7/code", sep=""))
 
 library(ggplot2)
 library(reshape2)
