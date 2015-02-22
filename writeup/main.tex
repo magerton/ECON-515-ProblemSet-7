@@ -149,8 +149,8 @@ It is clear to see that these are of little help since we have a bunch of parame
 %	&= \alpha_0^2 \frac{(\alpha_1 - \alpha_0 - \alpha_c)\sigma^2_\theta}{\sqrt{(\alpha_1 - \alpha_0 - \alpha_c)^2\sigma_\theta^2 + \sigma_0^2}} + \sigma_\theta^2 \left(1 - \frac{(\alpha_1 - \alpha_0 - \alpha_c)^2\sigma^4_\theta}{\sigma_0^2 \left[(\alpha_1 - \alpha_0 - \alpha_c)^2\sigma_\theta^2 + \sigma_0^2 \right]} \right) \\
 \Var (Y_1| \eta\geq -t ) &= \alpha_1^2 \Var\left(\theta\middle| \eta \geq t\right) + \sigma^2_1 
 \end{align*}
-Fortunately, with the measurement equations, we can say things. Recall $I=E[Y_1 - Y_0 - C|X,Z,\theta]$. \textbf{I have no idea what to do with the last 2 eqns b/c how do we compute $I$ w/ out $\theta$ ??}
-\begin{align*}
+Fortunately, with the measurement equations, we can say things. Recall $I=E[Y_1 - Y_0 - C|X,Z,\theta]$. If we had an estimate of $I$, we would be in business... and when we do EM/MLE, we do get an estimate of $I$ (right). \textbf{Previously: ``I have no idea what to do with the last 2 eqns b/c how do we compute $I$ w/ out $\theta$ This is maybe why we need MLE and EM??''}
+\begin{align}
 \Cov(Y_0 - \beta_0 X, M^A - X^M\beta_A) &= \alpha_0 \sigma^2_\theta \\
 \Cov(Y_0 - \beta_0 X, M^B - X^M\beta_B) &= \alpha_0 \alpha_B \sigma^2_\theta \\
 \Cov(Y_1 - \beta_1 X, M^A - X^M\beta_A) &= \alpha_1 \sigma^2_\theta \\
@@ -158,9 +158,14 @@ Fortunately, with the measurement equations, we can say things. Recall $I=E[Y_1 
 \Cov\left[I - \widetilde \delta - \widetilde \beta x -\gamma_2 z,\; \left(M^A - X^M\beta_A \right)\right]
 	&= (\alpha_1 - \alpha_0 - \alpha_c) \sigma^2_\theta \\
 \Cov\left[I - \widetilde \delta - \widetilde \beta x -\gamma_2 z,\; \left(M^B - X^M\beta_B \right)\right]
-	&= (\alpha_1 - \alpha_0 - \alpha_c) \alpha_B \sigma^2_\theta
-\end{align*}
-The top four equations give us two measurements for $\alpha_B$. We also use the first and third along with $\rho \sigma_\theta$ to get $\alpha_c \sigma^2_\theta$. We are still not able to pull apart $\alpha_0/\alpha_1$, which means we are having trouble getting $\sigma^2_\theta$ and $\sigma^2_{k}$.
+	&= (\alpha_1 - \alpha_0 - \alpha_c) \alpha_B \sigma^2_\theta \\
+\Cov\left[I - \widetilde \delta - \widetilde \beta x -\gamma_2 z,\; \left(Y_0 - X\beta_0 \right)\right] 
+	&= (\alpha_1 - \alpha_0 - \alpha_c) \alpha_0\sigma^2_\theta \\
+\Cov\left[I - \widetilde \delta - \widetilde \beta x -\gamma_2 z,\; \left(Y_1 - X\beta_1 \right)\right] 
+	&= (\alpha_1 - \alpha_0 - \alpha_c) \alpha_1 \sigma^2_\theta
+\end{align}
+The top four equations give us two measurements for $\alpha_B$. The bottom four plus knowledge of $(\alpha_1 - \alpha_0 - \alpha_c)\sigma^2_\theta$ from the two-step gives us $\alpha_0$ and $\alpha_1$ (just divide them). With $\alpha_k$s in hand plus $\alpha_B$ give us multiple measurements for $\sigma^2_\theta$. We plug these in to the variances for $\Var(Y_k|X,Z,s=k)$ and get $\sigma_k^2$. Done.
+
 \subsection{MLE approach}
 
 The contribution to the likelihood of any given individual $i$ is now the product of the likelihood of the wage and choice times the product of the likelihoods of the test equations.
