@@ -1,0 +1,10 @@
+*.zip
+Old
+writeup
+!*.tex
+!*.pdf
+*sublime-workspace
+.DS_Store
+rsc
+plots/png
+plots/wmf
