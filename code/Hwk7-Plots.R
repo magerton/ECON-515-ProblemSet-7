@@ -4,52 +4,52 @@ rm    (list=ls())
 mydir = "C:/mja3/SkyDrive/"
 # mydir = "/Users/magerton/OneDrive/"
 
-setwd (paste(mydir, "Rice/Class/econ 515 - Labor/PS5/code", sep=""))
+setwd (paste(mydir, "Rice/Class/econ 515 - Labor/PS7/code", sep=""))
 
 library(ggplot2)
 library(reshape2)
-library(plm)
+# library(plm)
 
-data <- read.table("../data_ps5_spring2015.raw", 
-                   header=FALSE, 
-                   col.names=c("id","x","z","y","p","w"),
-                   colClasses=c("integer",rep("numeric",3),"integer","numeric")
+data <- read.table("../data_ps7_spring2015.raw", 
+                   header=TRUE, 
+                   col.names=c("id","s","y","ma","mb","x","z","xm"),
+                   colClasses=c("integer","integer",rep("numeric",6))
                    )
 
 origdata <- data
-data <- melt(data, id.vars=c("id","p"))
+data <- melt(data, id.vars=c("id","s"))
 
 plots <- list()
  
-for (var in c("x","z") ) {
+for (var in c("x","z","xm","ma","mb","y") ) {
 plots[[var]] <- 
     ggplot(subset(data, variable==var), aes(x=value)) + 
     geom_density(fill="black") + 
-    facet_grid(p ~ ., scales="free") + xlab("") + ylab("") + 
+    facet_grid(s ~ ., scales="free") + xlab("") + ylab("") + 
     ggtitle(paste("Kernel Density estimates of",var))
 }
 
-for (var in c("w","y") ) {
-plots[[var]] <- 
-  ggplot(subset(data, variable==var), aes(x=log(value))) + 
-  geom_density(fill="black") + 
-  facet_grid(p ~ ., scales="free") + xlab("") + ylab("") + 
-  ggtitle(paste("Kernel Density estimates of log",var))
-}
-
-# ggplot(subset(data, variable=="y"), aes(x=log(value))) + 
-#   geom_histogram(fill="black") + 
+# for (var in c("w","y") ) {
+# plots[[var]] <- 
+#   ggplot(subset(data, variable==var), aes(x=log(value))) + 
+#   geom_density(fill="black") + 
 #   facet_grid(p ~ ., scales="free") + xlab("") + ylab("") + 
 #   ggtitle(paste("Kernel Density estimates of log",var))
-
-plots[["XZ"]] <- 
-ggplot(origdata, aes(x=x, y=z)) + 
-  stat_density2d(aes(fill = ..level..), geom="polygon") +
-  facet_grid(p ~ .)
-
+# }
+# 
+# # ggplot(subset(data, variable=="y"), aes(x=log(value))) + 
+# #   geom_histogram(fill="black") + 
+# #   facet_grid(p ~ ., scales="free") + xlab("") + ylab("") + 
+# #   ggtitle(paste("Kernel Density estimates of log",var))
+# 
+# plots[["XZ"]] <- 
 # ggplot(origdata, aes(x=x, y=z)) + 
-#   stat_density2d(aes(fill = ..density..), geom="tile", contour=FALSE) +
-#   facet_grid(p ~ .) + scale_fill_gradient2(high="blue")
+#   stat_density2d(aes(fill = ..level..), geom="polygon") +
+#   facet_grid(p ~ .)
+# 
+# # ggplot(origdata, aes(x=x, y=z)) + 
+# #   stat_density2d(aes(fill = ..density..), geom="tile", contour=FALSE) +
+# #   facet_grid(p ~ .) + scale_fill_gradient2(high="blue")
 
 for (fmt in c("pdf","wmf","png") ){
   for (i in names(plots)){
