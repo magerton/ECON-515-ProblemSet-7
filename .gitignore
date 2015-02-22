@@ -1,8 +1,8 @@
 *.zip
 Old
-writeup
-!**/*tex
-!**/*pdf
+writeup/*
+!**tex
+!**pdf
 *sublime-workspace
 .DS_Store
 rsc

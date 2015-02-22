@@ -1,0 +1,154 @@
+\documentclass[11pt,letterpaper]{article}
+%\usepackage[utf8]{inputenc}
+%\usepackage{fontspec}
+%\usepackage{listingsutf8}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{pgffor}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{subcaption}
+\usepackage{bbm}
+\usepackage{lscape}
+
+
+% ------------------------------------------------------
+
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator{\Var}{Var}
+\DeclareMathOperator{\Cov}{Cov}
+\def\inprob{\,{\buildrel p \over \longrightarrow}\,} 
+\def\indist{\,{\buildrel d \over \longrightarrow}\,} 
+
+\DeclareMathOperator\F{\mathcal{F}}
+
+% ------------------------------------------------------
+ 
+\input{./julia-listing.tex}
+
+\graphicspath{{../plots/pdf/}{../plots/}}
+\setlength\parindent{0.0in}
+
+% ------------------------------------------------------
+
+\title{\textbf{Homework 7} \\ Labor Economics}
+\author{Mark Agerton}
+\date{Due Mon, Feb 23}
+
+% ------------------------------------------------------
+
+\begin{document}
+
+\maketitle
+
+\section{Setup}
+Wages are
+\begin{align*}
+y_0 &= \delta_0 + \beta_0 x + \theta + \epsilon_0 \\
+y_1 &= \delta_1 + \beta_1 x + \alpha_1\theta + \epsilon_1
+\end{align*}
+Also define the utility shifter function $C$ and an index function $I$
+\begin{align*}
+C &= \gamma_0 + \gamma_2 z + \gamma_3 x + \alpha_C \theta  \\
+I &= E[y_1 - y_0 - C|\F]  \\
+  &= \underbrace{(\delta_1 - \delta_0 - \gamma_0)}_{\widetilde \delta} + \underbrace{(\beta_0 - \beta_1 - \gamma_3)}_{\widetilde \beta} x_i - \gamma_2 z + \underbrace{(\alpha_1 - 1- \alpha_C)}_{\widetilde \alpha} \theta - \epsilon_{c}
+\end{align*}
+The distribution of shocks is
+\[
+\left. \begin{pmatrix} \epsilon_{i,0} \\ \epsilon_{i,1} \\ \epsilon_{i,C} \end{pmatrix} \right|_{x_i,z_i,\theta_i}
+\sim N
+\left[ \begin{pmatrix} 0 \\ 0 \\ 0 \end{pmatrix}, \begin{pmatrix} \sigma_0^2& 0 & 0\\0& \sigma_1^2& 0 \\0 & 0& \sigma_C^2\end{pmatrix}	\right] 
+\]
+The information set for the agent is $\F$. The preference shock $\epsilon_C \in \F$, but $\{\epsilon_0,\epsilon_1\} \notin \F$. The decision rule is
+\[
+s = 1 \Longleftrightarrow E[I \geq 0 | \F]
+\]
+
+\section{Q1}
+There is no unobserved heterogeneity in this model since we know $\theta$. Thus,
+\[
+E\left[ \begin{matrix} y_{0} \\ y_{1} \end{matrix} \middle | x_i,\theta_i, s=k \right]
+=
+\begin{bmatrix} 
+	\delta_0 + x\beta_0 + \theta         \\  
+	\delta_1 + x\beta_1 + \alpha_1\theta 
+\end{bmatrix} + 
+\underbrace{E\left[ \begin{matrix} \epsilon_{0} \\ \epsilon_{1} \end{matrix} \middle | x_i,\theta_i, \epsilon_c:big/small \right]}_{0}
+\]
+This is straight-up OLS, which means we recover $\{\delta, \beta, \alpha_1, \sigma^2_0, \sigma^2_1\}$. 
+\begin{align*}
+\Pr[S=1|\F] 
+&= \Pr\left[\epsilon_c \leq \widetilde \delta + \widetilde \beta x - \gamma_2 z + \widetilde \alpha \theta \middle | \F\right] \\
+&= \Phi\left[\frac{\overbrace{\left[(\delta_1 - \delta_0) + (\beta_1-\beta_0)x + (\alpha_1 - 1)\theta\right]}^{\text{known number}} -\gamma_0 - \gamma_2 z - \gamma_3 x - \alpha_c \theta }{\sigma_c} \middle | \F\right]
+\end{align*}
+Now we can get $\left\{ \gamma_0, \gamma_2, \gamma_3, \alpha_c, \sigma_c^2 \right\}$
+
+
+\section{Q2}
+
+Now we don't know $\theta$ but agents do. However, we do have two measurement equations $m \in \{A,B\}$:
+\begin{align*}
+M_{iA} &= x_i^M \beta_A^M + \theta_i + \epsilon_{iA}^M \\
+M_{iB} &= x_i^M \beta_B^M + \alpha_B\theta_i + \epsilon_{iB}^M
+\end{align*}
+where $\epsilon_m^M \sim N(0,\sigma^{M2}_m)$ are i.i.d. We can write
+\begin{align*}
+E[y_1 | x,z,s=1] 
+&= \delta_1 + \beta_1 x + E[\epsilon_1 + \alpha_1\theta | x,z, I\geq 0] \\
+&= \delta_1 + \beta_1 x + \alpha_1 E[\theta | x,z, I\geq 0] \\
+&= \delta_1 + \beta_1 x + \alpha_1\sigma^* E\left[\frac{\theta}{\sigma^*} \middle|0 \leq \widetilde \delta + \widetilde \beta x - \gamma_2 z + \underbrace{(\alpha_1 - \alpha_0 - \alpha_c)\theta - \epsilon_c}_\eta  \right] \\
+&= \delta_1 + \beta_1 x + \alpha_1\sigma^* E\left[\frac{\theta}{\sigma^*} \middle| \eta \geq - \left( \widetilde \delta + \widetilde \beta x - \gamma_2 z  \right) \right]
+\end{align*}
+Define $\eta \equiv (\alpha_1 - \alpha_0 - \alpha_c)\theta - \epsilon_c$. Then 
+\[
+\begin{pmatrix} \eta \\ \theta \end{pmatrix} 
+\sim N
+\left[ 
+	\begin{pmatrix} 0 \\ 0  \end{pmatrix}, 
+	\begin{pmatrix} 
+		\sigma^{*2}     & (\alpha_1 - \alpha_0 - \alpha_c)\sigma^2_\theta \\
+		(\alpha_1 - \alpha_0 - \alpha_c)\sigma^2_\theta & \sigma^2_\theta \\
+	\end{pmatrix}
+\right] 
+\]
+where $\sigma^{*2} = (\alpha_1 - \alpha_0 - \alpha_c)^2\sigma^2_\theta + \sigma^2_c$. We can project $\theta$ onto $\eta$, which means
+\[
+\theta = \frac{\Cov(\eta,\theta)}{\Var \eta } \eta + \nu = \frac{(\alpha_1 - \alpha_0 - \alpha_c)\sigma^2_\theta}{\sigma^{*2}}\eta + \nu
+\]
+where
+\[
+\nu \sim N\left( 0, \sigma^2_\theta \left( 1- \rho_{\eta\theta}^2\right)\right)
+\qquad\text{and} \qquad
+\rho_{\eta\theta} = \frac{(\alpha_1 - \alpha_0 - \alpha_c)\sigma^2_\theta}{\sigma^{*}\sigma_\theta}
+\]
+Letting $t \equiv -(\widetilde \delta + \widetilde \beta x - \gamma_2 z)/\sigma^* $, we can now write
+\begin{align*}
+E[y_0 | x,z,s=1] 
+&= \delta_1 + \beta_0 x + \alpha_0 \frac{(\alpha_1 - \alpha_0 - \alpha_c)\sigma^2_\theta}{\sigma^*} \overbrace{\frac{-\phi(t)}{\Phi(t)}}^{\lambda_0} \\
+E[y_1 | x,z,s=1] 
+&= \delta_1 + \beta_1 x + \alpha_1 \frac{(\alpha_1 - \alpha_0 - \alpha_c)\sigma^2_\theta}{\sigma^*} \underbrace{\frac{\phi(t)}{1-\Phi(t)}}_{\lambda_1} 
+\end{align*}
+
+
+\section{Histograms}
+\begin{landscape}
+\begin{figure}[h]
+	\centering
+	\begin{subfigure}[b]{0.3\textwidth}\centering \includegraphics[width=1\textwidth]{x}  \end{subfigure}
+	\begin{subfigure}[b]{0.3\textwidth}\centering \includegraphics[width=1\textwidth]{z}  \end{subfigure}
+    \begin{subfigure}[b]{0.3\textwidth}\centering \includegraphics[width=1\textwidth]{ma} \end{subfigure}
+
+    \begin{subfigure}[b]{0.3\textwidth}\centering \includegraphics[width=1\textwidth]{mb} \end{subfigure}
+    \begin{subfigure}[b]{0.3\textwidth}\centering \includegraphics[width=1\textwidth]{xm} \end{subfigure}
+    \begin{subfigure}[b]{0.3\textwidth}\centering \includegraphics[width=1\textwidth]{y} \end{subfigure}    
+    \caption{Plots}		
+\end{figure}	
+\end{landscape}
+
+
+\end{document}
+
+
