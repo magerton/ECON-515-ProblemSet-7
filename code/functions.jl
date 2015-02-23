@@ -54,31 +54,14 @@ end
 ## Normal PDF
 function normpdf(x::Union(Vector{Float64}, Float64, DataArray) ;mean=0,var=1) # a type-union should work here and keep code cleaner
     out = Distributions.pdf(Distributions.Normal(mean,var), x) 
+    out + (out .== 0.0)*eps(1.0) - (out .== 1.0)*eps(1.0) 
 end
-
-# function normpdf(x::Float64;mean=0,var=1)
-#   out = Distributions.pdf(Distributions.Normal(mean,var), x) 
-# end
-
-# function normpdf(x::DataArray;mean=0,var=1)
-#   out = Distributions.pdf(Distributions.Normal(mean,var), x) 
-# end
 
 ## Normal CDF
 function normcdf(x::Union(Vector{Float64}, Float64, DataArray);mean=0,var=1) 
     out = Distributions.cdf(Distributions.Normal(mean,var), x)
     out + (out .== 0.0)*eps(1.0) - (out .== 1.0)*eps(1.0) 
 end
-
-# function normcdf(x::Vector{Float64};mean=0,var=1)
-#   out = Distributions.cdf(Distributions.Normal(mean,var), x) 
-#   out + (out .== 0.0)*eps(1.0) - (out .== 1.0)*eps(1.0)
-# end
-
-# function normcdf(x::DataArray;mean=0,var=1)
-#   out = Distributions.cdf(Distributions.Normal(mean,var), x) 
-#   out + (out .== 0.0)*eps(1.0) - (out .== 1.0)*eps(1.0)
-# end
 
 ###################################################
 ######### Probit
@@ -179,8 +162,10 @@ function wtd_LL(ρ::Vector{Float64})
     # Should weights be additive?
     ll[j,:] = W[j] .* ( LL_term(ρ, σ_θ .* x_j) + normpdf(x_j) )' 
   end
-  countPlus!()
-  - sum(ll)
+  
+  out = - sum(ll)
+  countPlus!( out )
+  return(out)
 end
 
 function LL_term(ρ::Vector{Float64}, x::Float64)
@@ -216,8 +201,8 @@ function LL_term(ρ::Vector{Float64}, x::Float64)
   ϕ_M_B     = normpdf( (data[:M_b] - data[:X_m].*β_B - θ*α_B)./σ_B)
   
   ϕ_1 = ϕ_0 = zeros(N)
-  ϕ_1[sel1] = normpdf( (Y1 - X1 * [δ_1; β_1; α_1]) ./ σ_A)
-  ϕ_0[sel0] = normpdf( (Y0 - X0 * [δ_0; β_0; α_0]) ./ σ_B)
+  ϕ_1[sel1] = normpdf( (Y1 - X1 * [δ_1; β_1; α_1]) ./ σ_1)
+  ϕ_0[sel0] = normpdf( (Y0 - X0 * [δ_0; β_0; α_0]) ./ σ_2)
   
   Φ_s       = normcdf(
                 q.* (
@@ -225,7 +210,7 @@ function LL_term(ρ::Vector{Float64}, x::Float64)
                         (β_1 - β_0 - γ_3).*data[:X] +  
                         (-γ_2) .* data[:Z] +
                         (α_1 - α_0 - α_C) .* θ 
-                    ) .*σ_C  )
+                    ) ./ σ_C  )
 
   log(1 - Φ_s) + log(ϕ_0) + log(ϕ_1) + log(ϕ_M_A) + log(ϕ_M_B) 
 end
@@ -253,6 +238,14 @@ function countPlus!()
   if printCounter(count) 
     println("Eval $(count)")
   end
+end
+
+function countPlus!(out::Float64)
+  global count += 1
+  if printCounter(count) 
+    println("Eval $(count): value = $(round(out,5))")
+  end
+    return count
 end
 
 ###################################################

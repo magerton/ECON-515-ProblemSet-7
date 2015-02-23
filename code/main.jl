@@ -1,6 +1,17 @@
 using DataFrames
 using Distributions
 using Optim
+using Dates
+
+doLog = true
+originalSTDOUT = STDOUT
+
+if doLog == true 
+  (outRead, outWrite) = redirect_stdout()
+  println("-------------------------------------------------------------------")
+  println("Results for Homework 5\nStarted run at " * string(now()))
+  println("-------------------------------------------------------------------")
+end
 
 ###################################################
 ######### Structure of Code
@@ -19,23 +30,16 @@ using Optim
 ###################################################
 ######### Basic Parameters
 ###################################################
-data_dir = "C:/Users/Nick/SkyDrive/One_data/LaborEcon/PS7/"
-cd(data_dir)
-fs = "data_ps7_spring2015.raw"
+dir = "C:/Users/Nick/SkyDrive/One_data/LaborEcon/PS7/"
+dir = "C:/mja3/SkyDrive/Rice/Class/econ515-Labor/PS7/"
+fs  = "data_ps7_spring2015.raw"
+
+cd(dir)
 namevec = [symbol("id"),symbol("S"),symbol("Y"),symbol("M_a"),symbol("M_b"),symbol("X"),symbol("Z"),symbol("X_m")]
+data    = readtable(fs, separator = ' ', header = true, names = namevec)
 
-data = readtable(fs, separator = ' ', header = true, names = namevec)
-
-
-
-code_dir = "C:/Users/Nick/SkyDrive/One_data/LaborEcon/PS7/code"
-cd(code_dir)
-include("functions.jl")
-
-###################################################
-######### Read in data. Use DataFrames
-###################################################
-
+cd("./code/")
+include("./functions.jl")
 
 ###################################################
 ######### Process Data
@@ -139,28 +143,41 @@ X1 = [vec(data[sel1,:C]) vec(data[sel1,:X]) λ_0[sel1] ]
 se_ρ_1 = sqrt(diag(VCV_ρ_1))
 
 # publish params
-
-δ_0    = ρ_0[1]
-β_0    = ρ_0[2]
-π_0    = ρ_0[3]
-δ_0_se = se_ρ_0[1]
-β_0_se = se_ρ_0[2]
-π_0_se = se_ρ_0[3]
-
-δ_1    = ρ_1[1]
-β_1    = ρ_1[2]
-π_1    = ρ_1[3]
-δ_1_se = se_ρ_1[1]
-β_1_se = se_ρ_1[2]
+β_0    = ρ_0[2]    
+δ_0    = ρ_0[1]    
+π_0    = ρ_0[3]    
+δ_0_se = se_ρ_0[1] 
+β_0_se = se_ρ_0[2] 
+π_0_se = se_ρ_0[3] 
+δ_1    = ρ_1[1]    
+β_1    = ρ_1[2]    
+π_1    = ρ_1[3]    
+δ_1_se = se_ρ_1[1] 
+β_1_se = se_ρ_1[2] 
 π_1_se = se_ρ_1[3]
+
+println("Two-step parameters
+     δ_0    = $(round( ρ_0[1]   , 2 )) 
+     β_0    = $(round( ρ_0[2]   , 2 )) 
+     π_0    = $(round( ρ_0[3]   , 2 )) 
+
+     δ_0_se = $(round( se_ρ_0[1], 2 )) 
+     β_0_se = $(round( se_ρ_0[2], 2 )) 
+     π_0_se = $(round( se_ρ_0[3], 2 )) 
+
+     δ_1    = $(round( ρ_1[1]   , 2 )) 
+     β_1    = $(round( ρ_1[2]   , 2 )) 
+     π_1    = $(round( ρ_1[3]   , 2 )) 
+
+     δ_1_se = $(round( se_ρ_1[1], 2 )) 
+     β_1_se = $(round( se_ρ_1[2], 2 )) 
+     π_1_se = $(round( se_ρ_1[3], 2 )) \n " )
 
 ###################################################
 ######### Recover some more parameters
 ###################################################
 
 # cannot get gammas? Need them for next step. Estimate of ̂I
-
-
 
 ###################################################
 ######### Use covariances
@@ -179,35 +196,48 @@ M_A1_Xβ = convert(Array,data[sel1,:M_a])
 M_B1_Xβ = convert(Array,data[sel1,:M_b]) 
     - vec(data[sel1,:X_m]).*β_B 
 
+
 cov_0_A = (1/N_0)*sum(Y_0_Xβ'*M_A0_Xβ)
 cov_0_B = (1/N_0)*sum(Y_0_Xβ'*M_B0_Xβ)
 cov_1_A = (1/N_1)*sum(Y_1_Xβ'*M_A1_Xβ)
 cov_1_B = (1/N_1)*sum(Y_1_Xβ'*M_A1_Xβ)
+
+println("Cov of outcome and measurements from two-step
+    cov_0_A = $(round(cov_0_A, 2))
+    cov_0_B = $(round(cov_0_B, 2))
+    cov_1_A = $(round(cov_1_A, 2))
+    cov_1_B = $(round(cov_1_B, 2)) \n")
 
 ###################################################
 ######### EM algorithm
 ###################################################
 
 
-include("HG_wts.jl")
+include("./HG_wts.jl")
 
 σ_θ = 1
 initials = ones(18)
 initials[1:4] = [ρ_0[1] ρ_1[1] ρ_0[2] ρ_1[2]]
 opt_out = []
 
-# Is the idea we try for 100 iterations b/w inner MLE and outer σ_θ optimization?
-# what about a loop w/ "while (abs( opt_out.f_minimum - opt_out_old.f_minimum  ) > ftol) || (count < maxit) " ?
-for i = 1:100
-  count = 0
+println("Doing EM!\n")
 
+# Loop w/ "while (abs( opt_out.f_minimum - opt_out_old.f_minimum  ) > ftol) || (count < maxit) " ?
+for i = 1:5
+  
+  global count = 0
+  println("\n ----------Update $i: σ_θ = $(σ_θ) --------------\n\n")
+  
   opt_out = Optim.optimize(wtd_LL,vec(initials),
       xtol = 1e-32,
       ftol = 1e-32,
       grtol = 1e-14,
-      iterations = 2000,
+      iterations = 500,
       autodiff=true)
+
   initials = opt_out.minimum
+
+  println("\nResults: \t $opt_out \n\n")
 
   update = unpackparams(opt_out.minimum)
   δ_0 = update["δ_0"]
@@ -226,7 +256,7 @@ for i = 1:100
   Y1        = convert(Array,data[sel1,:Y])
   X1        = [vec(data[sel1,:C]) vec(data[sel1,:X])]
 
-  # Why are we getting a θ_hat? Is this to get an estimate for σ_θ?
+  # Form an updated estimate for θ_hat
   θ_hat = zeros(N)
   θ_A = data[:M_a]  - data[:X_m] .* β_A
   θ_B = (data[:M_b] - data[:X_m] .* β_B)./α_B
@@ -235,37 +265,49 @@ for i = 1:100
   θ_hat[sel0] = (1/3).* ( θ_A[sel0] + θ_B[sel0] +
           ( (Y0 - X0*[δ_0; β_0])  )./α_0 )
   σ_θ = var(θ_hat)
+
+println("\t
+  δ_0 = $(round(opt_out.minimum[1]  , 2))
+  δ_1 = $(round(opt_out.minimum[2]  , 2))
+  β_0 = $(round(opt_out.minimum[3]  , 2))
+  β_1 = $(round(opt_out.minimum[4]  , 2))
+
+  γ_0 = $(round(opt_out.minimum[5]  , 2))
+  γ_2 = $(round(opt_out.minimum[6]  , 2))
+  γ_3 = $(round(opt_out.minimum[7]  , 2))
+
+  α_0 = $(round(opt_out.minimum[8]  , 2))
+  α_1 = $(round(opt_out.minimum[9]  , 2))
+  α_C = $(round(opt_out.minimum[10] , 2))
+
+  σ_C = $(round(opt_out.minimum[11] , 2))
+  σ_1 = $(round(opt_out.minimum[12] , 2))
+  σ_2 = $(round(opt_out.minimum[13] , 2))
+
+  α_A = 1 (normalized)
+  β_A = $(round(opt_out.minimum[14] , 2))
+  σ_A = $(round(opt_out.minimum[15] , 2))
+  α_B = $(round(opt_out.minimum[16] , 2))
+  β_B = $(round(opt_out.minimum[17] , 2))
+  σ_B = $(round(opt_out.minimum[18] , 2))")
+
 end
 
 
-opt_out.minimum
+if doLog == true
 
-ρ_0
-ρ
+  println("-------------------------------------------------------------------")
+  println("Finished run at " * string(now()))
+  println("-------------------------------------------------------------------")
 
+  close(outWrite)
+  stringOut = readavailable(outRead)
+  close(outRead)
+  redirect_stdout(originalSTDOUT)
 
-str = ["δ_0", "δ_1", "β_0","β_1",
-    "γ_0","γ_2","γ_3","α_0","α_1",
-    "α_C","σ_C","σ_1","σ_2","β_A",
-    "α_B","σ_A","β_B","σ_B"]
+  f = open("../Hwk7-Results.txt", "w")
+  write(f, stringOut )
+  close(f)
 
-numparams = length(opt_out.minimum)
-for i = 1:numparams
-
-  @sprintf("%s  :  %5.3f ", [str[i] opt_out.minimum[i]])
-
+  println(stringOut)
 end
-
-# println("Coefficients from model 1: ")
-# println("           [β_0,β_1,β_2] = $(round(beta_MLE,3))")
-# println("  [SE(β0),SE(β1),SE(β1)] = $(round(beta_SE,3))")
-# println("Coefficients from model 2:")
-# println("              [γ0,γ1,γ2] = $(round(gamma,3))")
-# println("  [SE(γ0),SE(γ1),SE(γ1)] = $(round(gamma_SE,3))")
-# println(" ")
-# println(" ")
-# println("                     ρ is: $(round(rho_mle,3))")
-# println("                 SE(ρ) is: $(round(rho_SE,3))")
-# println("               Sigma_v is: $(round(sigma_v,3))")
-# println("")
-# println("            MAX Log(L) is: $(round(probit_opt.f_minimum,3))")
