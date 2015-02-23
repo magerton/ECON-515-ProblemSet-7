@@ -56,7 +56,7 @@ function normpdf(x::Vector{Float64};mean=0,var=1)
 	out = Distributions.pdf(Distributions.Normal(mean,var), x) 
 end
 
-function normpdf(x::Vector{Float64};mean=0,var=1)
+function normpdf(x::Float64;mean=0,var=1)
 	out = Distributions.pdf(Distributions.Normal(mean,var), x) 
 end
 
@@ -83,7 +83,6 @@ end
 ###################################################
 ######### Probit
 ###################################################
-
 
 function λ(θ::Vector{Float64})
 	q =	2d-1
@@ -168,6 +167,95 @@ function probit_results(θ::Vector,g!,h!)
 	 "ME1"=>ME1,"ME2"=>ME2]
 end
 
+###################################################
+######### EM algorithm
+###################################################
+
+function wtd_LL(ρ::Vector{Float64})
+ 
+  σ_θ = ρ[end]
+  NN = length(X)
+  ll = zeros(NN,N)
+  for (j,x_j) in  enumerate(X)
+    ll[j,:] = W[j].*( LL_term(ρ,σ_θ.*x_j) + normpdf(x_j) )'
+  end
+  countPlus!()
+  - sum(ll)
+end
+
+function LL_term(ρ::Vector{Float64}, x::Float64)
+
+  θ= x.*ones(N)
+  out = unpackparams(ρ)
+  δ_0 = out["δ_0"]
+  δ_1 = out["δ_1"]
+  β_0 = out["β_0"]
+  β_1 = out["β_1"]
+  γ_0 = out["γ_0"]
+  γ_2 = out["γ_2"]
+  γ_3 = out["γ_3"]
+  α_0 = out["α_0"]
+  α_1 = out["α_1"]
+  α_C = out["α_C"]
+  σ_C = out["σ_C"]
+  σ_1 = out["σ_1"]
+  σ_2 = out["σ_2"]
+  β_A = out["β_A"]
+  α_B = out["α_B"]
+  σ_A = out["σ_A"]
+  β_B = out["β_B"]
+  σ_B = out["σ_B"]
+
+  Y0        = convert(Array,data[sel0,:Y])
+  X0        = [vec(data[sel0,:C]) vec(data[sel0,:X]) θ[sel0]]
+  Y1        = convert(Array,data[sel1,:Y])
+  X1        = [vec(data[sel1,:C]) vec(data[sel1,:X]) θ[sel1]]
+  q         = 2.*convert(Array,data[:S]) -1
+
+  ϕ_M_A     = normpdf( (data[:M_a] - data[:X_m].*β_A - θ)./σ_A)
+  ϕ_M_B     = normpdf( (data[:M_b] - data[:X_m].*β_B - θ*α_B)./σ_B)
+  
+  ϕ_1       = ϕ_0 = zeros(N)
+  ϕ_1[sel1] = normpdf( (Y1 - X1*[δ_1; β_1; α_1])./σ_A)
+  ϕ_0[sel0] = normpdf( (Y0 - X0*[δ_0; β_0; α_0])./σ_B)
+  
+  Φ_s       = normcdf(q.* (
+    (δ_1-δ_0 -γ_0).*data[:C] +  
+    (β_1-β_0 -γ_3).*data[:X] +  
+    (-γ_2).*data[:Z] +
+    (α_1 - α_0 - α_C).*θ      ).*σ_C )
+
+  log( 1-Φ_s) + log(ϕ_0) + log(ϕ_1) + log(ϕ_M_A) + log(ϕ_M_B) 
+end
+
+function printCounter(count)
+	if count <= 5
+		denom = 1
+	elseif count <= 50
+		denom = 10
+	elseif count <= 200
+		denom = 25
+	elseif count <= 500
+		denom = 50
+	elseif count <= 2000
+		denom = 100
+	else
+		denom = 500
+	end
+	mod(count, denom) == 0 
+end
+
+
+function countPlus!()
+  global count += 1
+  if printCounter(count) 
+    println("Eval $(count)")
+  end
+end
+
+###################################################
+######### PS_7 functions
+###################################################
 
 function unpackparams(θ::Vector{Float64})
   d = minimum(size(θ))
@@ -187,9 +275,10 @@ function unpackparams(θ::Vector{Float64})
   σ_2 = θ[13]
   β_A = θ[14]
   σ_A = θ[15]
-  β_B = θ[16]
-  σ_B = θ[17]
-  σ_θ = θ[18]
+  α_A = θ[16]
+  β_B = θ[17]
+  σ_B = θ[18]
+  σ_θ = θ[19]
 
   return [  "δ_0" => δ_0,
   "δ_1" => δ_1,
@@ -206,6 +295,7 @@ function unpackparams(θ::Vector{Float64})
   "σ_2" => σ_2,
   "β_A" => β_A,
   "σ_A" => σ_A,
+  "α_B" => α_B,
   "β_B" => β_B,
   "σ_B" => σ_B,
   "σ_θ" => σ_θ]

@@ -97,6 +97,7 @@ h! = probit_hessian!
 
 initials = squeeze( (X'X)\X'd, 2).*2.*rand(size(X,2))
 
+probit_opt = []
 for kk = 1:iters
   probit_opt = Optim.optimize(f,g!,h!,vec(initials),
     xtol = 1e-32,
@@ -189,56 +190,45 @@ cov_1_B = (1/N_1)*sum(Y_1_Xβ'*M_A1_Xβ)
 
 include("HG_wts.jl")
 
+σ_θ = 1
+initials = ones(18)
 
+for i = 1:5
+  count = 0
 
-ρ= ones(18)
-x = X[i]*σ_θ
-x = .5 
-function wtd_LL_term(ρ::Vector{Float64}, x::Vector{Float64})
+  opt_out = Optim.optimize(wtd_LL,vec(initials),
+      xtol = 1e-32,
+      ftol = 1e-32,
+      grtol = 1e-14,
+      iterations = 5)
+  initials = opt_out.minimum
 
-  θ= x.*ones(N)
-  out = unpackparams(ρ)
-  δ_0 = out["δ_0"]
-  δ_1 = out["δ_1"]
-  β_0 = out["β_0"]
-  β_1 = out["β_1"]
-  γ_0 = out["γ_0"]
-  γ_2 = out["γ_2"]
-  γ_3 = out["γ_3"]
-  α_0 = out["α_0"]
-  α_1 = out["α_1"]
-  α_C = out["α_C"]
-  σ_C = out["σ_C"]
-  σ_1 = out["σ_1"]
-  σ_2 = out["σ_2"]
-  β_A = out["β_A"]
-  σ_A = out["σ_A"]
-  β_B = out["β_B"]
-  σ_B = out["σ_B"]
-  σ_θ = out["σ_θ"]
+  update = unpackparams(opt_out.minimum)
+  δ_0 = update["δ_0"]
+  δ_1 = update["δ_1"]
+  β_0 = update["β_0"]
+  β_1 = update["β_1"]
+  α_0 = update["α_0"]
+  α_1 = update["α_1"]
+  α_C = update["α_C"]
+  β_A = update["β_A"]
+  α_B = update["α_B"]
+  β_B = update["β_B"]
 
-  Y0 = convert(Array,data[sel0,:Y])
-  X0 = [vec(data[sel0,:C]) vec(data[sel0,:X]) θ[sel0]]
-  Y1 = convert(Array,data[sel1,:Y])
-  X1 = [vec(data[sel1,:C]) vec(data[sel1,:X]) θ[sel1]]
-  q = 2.*convert(Array,data[:S]) -1
+  Y0        = convert(Array,data[sel0,:Y])
+  X0        = [vec(data[sel0,:C]) vec(data[sel0,:X])]
+  Y1        = convert(Array,data[sel1,:Y])
+  X1        = [vec(data[sel1,:C]) vec(data[sel1,:X])]
 
-
-  ϕ_M_A = normpdf( (data[:M_a] - data[:X_m].*β_A - θ)./σ_A)
-  ϕ_M_B = normpdf( (data[:M_b] - data[:X_m].*β_B - θ*α_B)./σ_B)
-  
-  ϕ_1 = ϕ_0 = zeros(N)
-  ϕ_1[sel1] = normpdf( (Y1 - X1*[δ_1; β_1; α_1])./σ_A)
-  ϕ_0[sel0] = normpdf( (Y0 - X0*[δ_0; β_0; α_0])./σ_B)
-
-  1-normcdf(q.* (
-    (δ_1-δ_0 -γ_0).*data[:C] +  
-    (β_1-β_0 -γ_3).*data[:X] +  
-    (-γ_2).*data[:Z] +
-    (α_1 - α_0 - α_C).*θ      ).* )
-
-
-
+  θ_hat = zeros(N)
+  θ_A = data[:M_a] - data[:X_m].*β_A
+  θ_B = (data[:M_b] - data[:X_m].*β_B)./α_B
+  θ_hat[sel1] = (1/3).* ( θ_A[sel1] + θ_B[sel1] +
+          ( (Y1 - X1*[δ_1; β_1])  )./α_1 )
+  θ_hat[sel0] = (1/3).* ( θ_A[sel0] + θ_B[sel0] +
+          ( (Y0 - X0*[δ_0; β_0])  )./α_0 )
+  σ_θ = var(θ_hat)
+end
 
 
 
