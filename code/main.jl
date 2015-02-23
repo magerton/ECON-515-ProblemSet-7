@@ -1,9 +1,6 @@
-
-
 using DataFrames
 using Distributions
 using Optim
-
 
 ###################################################
 ######### Structure of Code
@@ -259,26 +256,6 @@ for i = 1:numparams
 
 end
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # println("Coefficients from model 1: ")
 # println("           [β_0,β_1,β_2] = $(round(beta_MLE,3))")
 # println("  [SE(β0),SE(β1),SE(β1)] = $(round(beta_SE,3))")
@@ -292,6 +269,3 @@ end
 # println("               Sigma_v is: $(round(sigma_v,3))")
 # println("")
 # println("            MAX Log(L) is: $(round(probit_opt.f_minimum,3))")
-
-
-

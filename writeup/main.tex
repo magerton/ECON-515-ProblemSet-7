@@ -1,7 +1,6 @@
 \documentclass[11pt,letterpaper]{article}
-%\usepackage[utf8]{inputenc}
-%\usepackage{fontspec}
-%\usepackage{listingsutf8}
+\usepackage[utf8]{inputenc}
+\usepackage{fontspec}
 \usepackage[margin=1in]{geometry}
 \usepackage{graphicx}
 \usepackage{pgffor}
@@ -27,7 +26,11 @@
 
 % ------------------------------------------------------
  
+\usepackage{fontspec}
+\setmonofont{Consolas}
 \input{./julia-listing.tex}
+
+% ------------------------------------------------------
 
 \graphicspath{{../plots/pdf/}{../plots/}}
 \setlength\parindent{0.0in}
@@ -202,6 +205,20 @@ Define $q_i \equiv 2s_i - 1$. Since we only observe $y_{1i}$ or $y_{i0}$, we sim
     \begin{subfigure}[b]{0.3\textwidth}\centering \includegraphics[width=1\textwidth]{y} \end{subfigure}    
     \caption{Histograms}		
 \end{figure}	
+
+
+
+\clearpage
+\section{Results}
+%\lstinputlisting[frame=single,language={}]{../Hwk5-Results.txt}
+
+\section{Main call}
+\lstinputlisting[frame=single, caption=Main call]{../code/main.jl}
+
+\section{Functions and weights}
+\lstinputlisting[frame=single, caption=Functions used]{../code/functions.jl}
+\lstinputlisting[frame=single, caption=Quadrature weights (from MATLAB)]{../code/HG_wts.jl}
+
 
 
 \end{document}
