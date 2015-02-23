@@ -199,6 +199,8 @@ initials = ones(18)
 initials[1:4] = [ρ_0[1] ρ_1[1] ρ_0[2] ρ_1[2]]
 opt_out = []
 
+# Is the idea we try for 100 iterations b/w inner MLE and outer σ_θ optimization?
+# what about a loop w/ "while (abs( opt_out.f_minimum - opt_out_old.f_minimum  ) > ftol) || (count < maxit) " ?
 for i = 1:100
   count = 0
 
@@ -227,9 +229,10 @@ for i = 1:100
   Y1        = convert(Array,data[sel1,:Y])
   X1        = [vec(data[sel1,:C]) vec(data[sel1,:X])]
 
+  # Why are we getting a θ_hat? Is this to get an estimate for σ_θ?
   θ_hat = zeros(N)
-  θ_A = data[:M_a] - data[:X_m].*β_A
-  θ_B = (data[:M_b] - data[:X_m].*β_B)./α_B
+  θ_A = data[:M_a]  - data[:X_m] .* β_A
+  θ_B = (data[:M_b] - data[:X_m] .* β_B)./α_B
   θ_hat[sel1] = (1/3).* ( θ_A[sel1] + θ_B[sel1] +
           ( (Y1 - X1*[δ_1; β_1])  )./α_1 )
   θ_hat[sel0] = (1/3).* ( θ_A[sel0] + θ_B[sel0] +

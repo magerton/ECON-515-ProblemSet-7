@@ -52,54 +52,54 @@ end
 ###################################################
 
 ## Normal PDF
-function normpdf(x::Vector{Float64};mean=0,var=1)
-	out = Distributions.pdf(Distributions.Normal(mean,var), x) 
+function normpdf(x::Union(Vector{Float64}, Float64, DataArray) ;mean=0,var=1) # a type-union should work here and keep code cleaner
+    out = Distributions.pdf(Distributions.Normal(mean,var), x) 
 end
 
-function normpdf(x::Float64;mean=0,var=1)
-	out = Distributions.pdf(Distributions.Normal(mean,var), x) 
-end
+# function normpdf(x::Float64;mean=0,var=1)
+#   out = Distributions.pdf(Distributions.Normal(mean,var), x) 
+# end
 
-function normpdf(x::DataArray;mean=0,var=1)
-	out = Distributions.pdf(Distributions.Normal(mean,var), x) 
-end
+# function normpdf(x::DataArray;mean=0,var=1)
+#   out = Distributions.pdf(Distributions.Normal(mean,var), x) 
+# end
 
 ## Normal CDF
-function normcdf(x::Vector{Float64};mean=0,var=1)
-	out = Distributions.cdf(Distributions.Normal(mean,var), x)
-	out + (out .== 0.0)*eps(1.0) - (out .== 1.0)*eps(1.0) 
+function normcdf(x::Union(Vector{Float64}, Float64, DataArray);mean=0,var=1) 
+    out = Distributions.cdf(Distributions.Normal(mean,var), x)
+    out + (out .== 0.0)*eps(1.0) - (out .== 1.0)*eps(1.0) 
 end
 
-function normcdf(x::Vector{Float64};mean=0,var=1)
-	out = Distributions.cdf(Distributions.Normal(mean,var), x) 
-	out + (out .== 0.0)*eps(1.0) - (out .== 1.0)*eps(1.0)
-end
+# function normcdf(x::Vector{Float64};mean=0,var=1)
+#   out = Distributions.cdf(Distributions.Normal(mean,var), x) 
+#   out + (out .== 0.0)*eps(1.0) - (out .== 1.0)*eps(1.0)
+# end
 
-function normcdf(x::DataArray;mean=0,var=1)
-	out = Distributions.cdf(Distributions.Normal(mean,var), x) 
-	out + (out .== 0.0)*eps(1.0) - (out .== 1.0)*eps(1.0)
-end
+# function normcdf(x::DataArray;mean=0,var=1)
+#   out = Distributions.cdf(Distributions.Normal(mean,var), x) 
+#   out + (out .== 0.0)*eps(1.0) - (out .== 1.0)*eps(1.0)
+# end
 
 ###################################################
 ######### Probit
 ###################################################
 
 function λ(θ::Vector{Float64})
-	q =	2d-1
-	q .* normpdf(q .* X*θ) ./ normcdf(q.*X*θ)
+    q = 2d-1
+    q .* normpdf(q .* X*θ) ./ normcdf(q.*X*θ)
 end
 
 
 function probit_LL(θ::Vector{Float64})
-	out = - sum( log( normcdf( (2d-1) .* X*θ) ) )
+    out = - sum( log( normcdf( (2d-1) .* X*θ) ) )
 end
 
 function probit_LL_g(θ::Vector{Float64}, grad::Vector{Float64})
-	out = - sum( log( normcdf( (2d-1) .* X*θ) ) )
-	if length(grad) > 0
-		grad[:] = - sum( λ(θ) .* X,  1 )
-	end
-	out
+    out = - sum( log( normcdf( (2d-1) .* X*θ) ) )
+    if length(grad) > 0
+        grad[:] = - sum( λ(θ) .* X,  1 )
+    end
+    out
 end
 
 function probit_gradient!(θ::Vector{Float64}, grad::Vector{Float64})
@@ -116,55 +116,56 @@ function probit_hessian!(θ::Vector{Float64}, hessian::Matrix{Float64})
 end
 
 function probit_vcov_score(θ::Vector{Float64}, g!)
-	K    = length(θ)
-	N = maximum(size(X))
-	score - zeros(K,1)
-	g!(θ,score)
-	vcv_hessian = N*(score*score') \ eye(K)
+    K = length(θ)
+    N = maximum(size(X))
+    score - zeros(K,1)
+    g!(θ,score)
+    vcv_hessian = N*(score*score') \ eye(K)
 end
 
 function probit_vcov_hessian(θ::Vector{Float64}, h!)
-	K    = length(θ)
-	hessian = zeros((K,K))
-	h!(θ, hessian)
-	vcv_hessian = N*(hessian\eye(K))
+    K       = length(θ)
+    hessian = zeros((K,K))
+    h!(θ, hessian)
+    vcv_hessian = N*(hessian\eye(K))
 end
 
 function probit_results(θ::Vector,g!,h!)
 
-	K = length(θ)
-	
-	vcv_hessian = repmat([NaN],K,K)
-	try
-		vcv_hessian = probit_vcov_hessian(θ, h!)
-	catch
-		println("No hessian for probit")
-	end
-	vcv_score = repmat([NaN],K,K)	
-	try 
-		vcv_score   = probit_vcov_score(θ, g!)
-	catch
-		println("No outer product for probit")
-	end
+    K = length(θ)
+    
+    vcv_hessian = repmat([NaN],K,K)
+    try
+        vcv_hessian = probit_vcov_hessian(θ, h!)
+    catch
+        println("No hessian for probit")
+    end
+    
+    vcv_score = repmat([NaN],K,K)   
+    try 
+        vcv_score   = probit_vcov_score(θ, g!)
+    catch
+        println("No outer product for probit")
+    end
 
-	std_h = sqrt(diag(vcv_hessian))
-	std_s = sqrt(diag(vcv_score))
-	
-	z_stat = θ./std_h
-	pvals = Distributions.cdf(Distributions.Normal(), -abs(z_stat))
+    std_h = sqrt(diag(vcv_hessian))
+    std_s = sqrt(diag(vcv_score))
+    
+    z_stat = θ./std_h
+    pvals = Distributions.cdf(Distributions.Normal(), -abs(z_stat))
 
-	X_bar = mean(X,1)
-	# # Partial Effect at the Average
-	ME1 = normpdf(vec(X_bar'.*θ)) .* θ
-	# # Average Partial Effect (pg. 5)
-	ME2 = mean(  normpdf( vec(X*θ) )  ) * θ
+    X_bar = mean(X,1)
+    # # Partial Effect at the Average
+    ME1 = normpdf(vec(X_bar'.*θ)) .* θ
+    # # Average Partial Effect (pg. 5)
+    ME2 = mean(  normpdf( vec(X*θ) )  ) * θ
 
-	return [
-	 "θ"=>θ ,
-	 "std_hess" => std_h,"std_score" => std_s,
-	 "vcv_hessian" => vcv_hessian, "vcv_score" => vcv_score,
-	 "z_stat"=> z_stat, "pvals"=> pvals,
-	 "ME1"=>ME1,"ME2"=>ME2]
+    return [
+     "θ"=>θ ,
+     "std_hess" => std_h,"std_score" => std_s,
+     "vcv_hessian" => vcv_hessian, "vcv_score" => vcv_score,
+     "z_stat"=> z_stat, "pvals"=> pvals,
+     "ME1"=>ME1,"ME2"=>ME2]
 end
 
 ###################################################
@@ -175,7 +176,8 @@ function wtd_LL(ρ::Vector{Float64})
   NN = length(X)
   ll = zeros(NN,N)
   for (j,x_j) in  enumerate(X)
-    ll[j,:] = W[j].*( LL_term(ρ,σ_θ.*x_j) + normpdf(x_j) )'
+    # Should weights be additive?
+    ll[j,:] = W[j] .* ( LL_term(ρ, σ_θ .* x_j) + normpdf(x_j) )' 
   end
   countPlus!()
   - sum(ll)
@@ -183,7 +185,7 @@ end
 
 function LL_term(ρ::Vector{Float64}, x::Float64)
 
-  θ= x.*ones(N)
+  θ   = x.*ones(N)
   out = unpackparams(ρ)
   δ_0 = out["δ_0"]
   δ_1 = out["δ_1"]
@@ -210,37 +212,39 @@ function LL_term(ρ::Vector{Float64}, x::Float64)
   X1        = [vec(data[sel1,:C]) vec(data[sel1,:X]) θ[sel1]]
   q         = 2.*convert(Array,data[:S]) -1
 
-  ϕ_M_A     = normpdf( (data[:M_a] - data[:X_m].*β_A - θ)./σ_A)
+  ϕ_M_A     = normpdf( (data[:M_a] - data[:X_m].*β_A - θ)    ./σ_A)
   ϕ_M_B     = normpdf( (data[:M_b] - data[:X_m].*β_B - θ*α_B)./σ_B)
   
-  ϕ_1       = ϕ_0 = zeros(N)
-  ϕ_1[sel1] = normpdf( (Y1 - X1*[δ_1; β_1; α_1])./σ_A)
-  ϕ_0[sel0] = normpdf( (Y0 - X0*[δ_0; β_0; α_0])./σ_B)
+  ϕ_1 = ϕ_0 = zeros(N)
+  ϕ_1[sel1] = normpdf( (Y1 - X1 * [δ_1; β_1; α_1]) ./ σ_A)
+  ϕ_0[sel0] = normpdf( (Y0 - X0 * [δ_0; β_0; α_0]) ./ σ_B)
   
-  Φ_s       = normcdf(q.* (
-    (δ_1-δ_0 -γ_0).*data[:C] +  
-    (β_1-β_0 -γ_3).*data[:X] +  
-    (-γ_2).*data[:Z] +
-    (α_1 - α_0 - α_C).*θ      ).*σ_C )
+  Φ_s       = normcdf(
+                q.* (
+                        (δ_1 - δ_0 - γ_0).*data[:C] +  
+                        (β_1 - β_0 - γ_3).*data[:X] +  
+                        (-γ_2) .* data[:Z] +
+                        (α_1 - α_0 - α_C) .* θ 
+                    ) .*σ_C  )
 
-  log( 1-Φ_s) + log(ϕ_0) + log(ϕ_1) + log(ϕ_M_A) + log(ϕ_M_B) 
+  log(1 - Φ_s) + log(ϕ_0) + log(ϕ_1) + log(ϕ_M_A) + log(ϕ_M_B) 
 end
 
 function printCounter(count)
-	if count <= 5
-		denom = 1
-	elseif count <= 50
-		denom = 10
-	elseif count <= 200
-		denom = 25
-	elseif count <= 500
-		denom = 50
-	elseif count <= 2000
-		denom = 100
-	else
-		denom = 500
-	end
-	mod(count, denom) == 0 
+    if count <= 5
+        denom = 1
+    elseif count <= 50
+        denom = 10
+    elseif count <= 200
+        denom = 25
+    elseif count <= 500
+        denom = 50
+    elseif count <= 2000
+        denom = 100
+    else
+        denom = 500
+    end
+    mod(count, denom) == 0 
 end
 
 
