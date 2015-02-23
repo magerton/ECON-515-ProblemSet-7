@@ -3,8 +3,6 @@
 using DataFrames
 using Distributions
 using Optim
-using PyPlot
-using KernelDensity
 
 
 ###################################################
@@ -19,22 +17,28 @@ using KernelDensity
 # Process Probit results
 # recover structural parameters
 # estimate variance of structural parameters
+# EM algorithm
 
 ###################################################
 ######### Basic Parameters
 ###################################################
-dir = "C:/Users/Nick/SkyDrive/One_data/LaborEcon/PS_7/"
+data_dir = "C:/Users/Nick/SkyDrive/One_data/LaborEcon/PS7/"
+cd(data_dir)
 fs = "data_ps7_spring2015.raw"
 namevec = [symbol("id"),symbol("S"),symbol("Y"),symbol("M_a"),symbol("M_b"),symbol("X"),symbol("Z"),symbol("X_m")]
 
-cd(dir)
+data = readtable(fs, separator = ' ', header = true, names = namevec)
+
+
+
+code_dir = "C:/Users/Nick/SkyDrive/One_data/LaborEcon/PS7/code"
+cd(code_dir)
 include("functions.jl")
 
 ###################################################
 ######### Read in data. Use DataFrames
 ###################################################
 
-data = readtable(fs, separator = ' ', header = true, names = namevec)
 
 ###################################################
 ######### Process Data
@@ -192,15 +196,18 @@ include("HG_wts.jl")
 
 σ_θ = 1
 initials = ones(18)
+initials[1:4] = [ρ_0[1] ρ_1[1] ρ_0[2] ρ_1[2]]
+opt_out = []
 
-for i = 1:5
+for i = 1:100
   count = 0
 
   opt_out = Optim.optimize(wtd_LL,vec(initials),
       xtol = 1e-32,
       ftol = 1e-32,
       grtol = 1e-14,
-      iterations = 5)
+      iterations = 2000,
+      autodiff=true)
   initials = opt_out.minimum
 
   update = unpackparams(opt_out.minimum)
@@ -231,7 +238,23 @@ for i = 1:5
 end
 
 
+opt_out.minimum
 
+ρ_0
+ρ
+
+
+str = ["δ_0", "δ_1", "β_0","β_1",
+    "γ_0","γ_2","γ_3","α_0","α_1",
+    "α_C","σ_C","σ_1","σ_2","β_A",
+    "α_B","σ_A","β_B","σ_B"]
+
+numparams = length(opt_out.minimum)
+for i = 1:numparams
+
+  @sprintf("%s  :  %5.3f ", [str[i] opt_out.minimum[i]])
+
+end
 
 
 

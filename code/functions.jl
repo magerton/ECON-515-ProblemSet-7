@@ -171,9 +171,7 @@ end
 ######### EM algorithm
 ###################################################
 
-function wtd_LL(ρ::Vector{Float64})
- 
-  σ_θ = ρ[end]
+function wtd_LL(ρ::Vector{Float64}) 
   NN = length(X)
   ll = zeros(NN,N)
   for (j,x_j) in  enumerate(X)
@@ -275,10 +273,9 @@ function unpackparams(θ::Vector{Float64})
   σ_2 = θ[13]
   β_A = θ[14]
   σ_A = θ[15]
-  α_A = θ[16]
+  α_B = θ[16]
   β_B = θ[17]
   σ_B = θ[18]
-  σ_θ = θ[19]
 
   return [  "δ_0" => δ_0,
   "δ_1" => δ_1,
@@ -297,6 +294,5 @@ function unpackparams(θ::Vector{Float64})
   "σ_A" => σ_A,
   "α_B" => α_B,
   "β_B" => β_B,
-  "σ_B" => σ_B,
-  "σ_θ" => σ_θ]
+  "σ_B" => σ_B]
 end
