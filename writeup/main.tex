@@ -173,9 +173,9 @@ We use these covariances to identify the rest of the model.
 \widehat{\alpha_0 / \alpha_1} &= (\alpha_0\rho\sigma^2_\theta)/(\alpha_0\rho\sigma^2_\theta) \\
 \widehat \alpha_B &= \Cov(Y_0, M^B)/\Cov(Y_0, M^A)  \\
 \widehat \sigma^2_\theta &= \Cov(M^A, M^B)/\widehat \alpha_B  \\
-\widehat \alpha_0 &= \Cov(Y_0, M^A)  \\
-\widehat \alpha_1 &= \Cov(Y_1, M^B)  \\
-\widehat \sigma^2_A &= \Var(M^A) - \sigma^2_\theta  \\
+\widehat \alpha_0 &= \Cov(Y_0, M^A)/ \widehat\sigma_\theta^2  \\
+\widehat \alpha_1 &= \Cov(Y_1, M^B)/ \widehat\sigma_\theta^2  \\
+\widehat \sigma^2_A &= \Var(M^A) - \widehat\sigma^2_\theta  \\
 \widehat \sigma^2_B  &= \Var(M^B) - \widehat \alpha_B^2 \widehat \sigma^2_\theta  \\
 \widehat \rho &= \widehat{ \alpha_0 (\rho\sigma_\theta)} / (\widehat \alpha_0 \sqrt{\widehat \sigma_\theta^2})  \\
               &= \widehat{ \alpha_1 (\rho\sigma_\theta)} / (\widehat \alpha_1 \sqrt{\widehat \sigma_\theta^2})  \\

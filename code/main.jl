@@ -63,10 +63,6 @@ data[data[:S] .== 0,:Y_1]  = data[data[:S] .== 0,:Y]
 sel0 = data[:S] .== 0
 sel1 = data[:S] .== 1
 
-K_A       = 2
-K_B       = 2
-numparams = 10 # just a guess
-
 ###################################################
 ######### Step 1
 ###################################################
@@ -128,7 +124,6 @@ param_probit_pval = probit_res["pvals"]
 t = -(X*param_probit)
 λ_0 = -normpdf(t)./normcdf(t)
 λ_1 = normpdf(t)./(1-normcdf(t))
-
 
 # Y_0
 Y0 = convert(Array,data[sel0,:Y])
@@ -210,15 +205,13 @@ cov_A_B = (1/N)*sum(M_A_Xβ'*M_B_Xβ)
 
 α_B = cov_0_B/cov_0_A
 σ_θ = sqrt(cov_A_B/α_B)
-α_1 = cov_1_A/(σ_θ^2)
 α_0 = cov_0_A/(σ_θ^2)
+α_1 = cov_1_A/(σ_θ^2)
 
 # σ_A = sqrt( var(convert(Array,data[:M_a])) - σ_θ^2  )
 #########################################################
 σ_A_sq =  var(convert(Array,data[:M_a])) - σ_θ^2  ### < NEGATIVE VARIANCE
 σ_B = sqrt(  var(convert(Array,data[:M_b])) -α_B^2*σ_θ^2  )
-
-
 
 ρ_ηθ_0 = π_0 / (α_0*σ_θ)
 ρ_ηθ_1 = π_1 / (α_1*σ_θ)
@@ -226,26 +219,52 @@ cov_A_B = (1/N)*sum(M_A_Xβ'*M_B_Xβ)
 ρ_ηθ   = ρ_ηθ_0 # ρ_ηθ_1  #### < NOT THE SAME NUMEBR
 
 δ_t_0 = λ_0[sel0]'*(λ_0[sel0] - t[sel0])
-σ_0 = sqrt( 
-    var(convert(Array,data[sel0,:Y])) - α_0^2.*(ρ_ηθ*σ_θ)^2*
-    (1 -δ_t_0) - σ_θ^2*(1-ρ_ηθ^2)
+σ_0_ρ0 = sqrt( 
+    var(convert(Array,data[sel0,:Y])) - α_0^2.*(ρ_ηθ_0*σ_θ)^2*
+    (1 -δ_t_0) - σ_θ^2*(1-ρ_ηθ_0^2)
   ) # variance on income. Large
+σ_0_ρ1 = sqrt( 
+    var(convert(Array,data[sel0,:Y])) - α_0^2.*(ρ_ηθ_1*σ_θ)^2*
+    (1 -δ_t_0) - σ_θ^2*(1-ρ_ηθ_1^2)
+  ) # variance on income. Large
+
 
 δ_t_1 = λ_1[sel1]'*(λ_1[sel1] - t[sel1])
-σ_1 = sqrt( 
-    var(convert(Array,data[sel1,:Y])) - α_1^2.*(ρ_ηθ*σ_θ)^2*
-    (1 -δ_t_1) - σ_θ^2*(1-ρ_ηθ^2)
+σ_1_ρ0 = sqrt( 
+    var(convert(Array,data[sel1,:Y])) - α_1^2.*(ρ_ηθ_0*σ_θ)^2*
+    (1 -δ_t_1) - σ_θ^2*(1-ρ_ηθ_0^2)
+  ) # variance on income. Large
+σ_1_ρ1 = sqrt( 
+    var(convert(Array,data[sel1,:Y])) - α_1^2.*(ρ_ηθ_1*σ_θ)^2*
+    (1 -δ_t_1) - σ_θ^2*(1-ρ_ηθ_1^2)
   ) # variance on income. Large
 
-f_c(α_c) = ρ_ηθ*σ_θ - (α_1 - α_0 - α_c)*σ_θ^2*(
+
+# δ_t_0 = - λ_0[sel0].*t[sel0] + λ_0[sel0].*λ_0[sel0] # causes negative number
+# σ_0 = sqrt(
+#   (1/N_0)*sum( 
+#     var(convert(Array,data[sel0,:Y])) - α_0^2.*(ρ_ηθ*σ_θ)^2*
+#     (1 - δ_t_0) - σ_θ^2*(1-ρ_ηθ^2) )
+#   ) # variance on income. Large
+
+# δ_t_1 = - λ_1[sel1].*t[sel1] + λ_0[sel1].*λ_1[sel1]
+# σ_1 = sqrt( 
+#     (1/N_1)*sum (
+#     var(convert(Array,data[sel1,:Y])) - α_1^2.*(ρ_ηθ*σ_θ)^2*
+#     (1 -δ_t_1) - σ_θ^2*(1-ρ_ηθ^2) )
+#   ) # variance on income. Large
+
+f_c_ρ0(α_c) = ρ_ηθ_0*σ_θ - (α_1 - α_0 - α_c)*σ_θ^2*(
   (α_1 - α_0 - α_c)^2*σ_θ^2 + 1)^(-.5)
-α_c = fzero(f_c, -1000, 1000)
+f_c_ρ1(α_c) = ρ_ηθ_1*σ_θ - (α_1 - α_0 - α_c)*σ_θ^2*(
+  (α_1 - α_0 - α_c)^2*σ_θ^2 + 1)^(-.5)
+α_c_ρ0 = fzero(f_c_ρ0, -1000, 1000)
+α_c_ρ1 = fzero(f_c_ρ1, -1000, 1000)
 
 # normalize σ_c =1
 σ_c = 1
 
 σ_star = sqrt( (α_1 - α_0 - α_c)^2*σ_θ^2 + σ_c^2)
-
 
 γ_0 = δ_1 - δ_0 - param_probit[1]*σ_star
 γ_1 = β_1 - β_0 - param_probit[2]*σ_star
@@ -262,11 +281,12 @@ V(kk) =[VCV_ρ_1[kk]     0           0;
 
 
 
-println("Cov of outcome and measurements from two-step
+println("Cov from two-step
     cov_0_A = $(round(cov_0_A, 2))
     cov_0_B = $(round(cov_0_B, 2))
     cov_1_A = $(round(cov_1_A, 2))
-    cov_1_B = $(round(cov_1_B, 2)) \n")
+    cov_1_B = $(round(cov_1_B, 2)) 
+    cov_A_B = $(round(cov_A_B, 2)) \n")
 
 
 println("Final Parameters
@@ -274,23 +294,29 @@ println("Final Parameters
   σ_θ    = $(round(σ_θ   ,3))
   α_1    = $(round(α_1   ,3))
   α_0    = $(round(α_0   ,3))
-  σ_A_sq = $(round(σ_A_sq,3)) squared: $(round(NaN,3)) 
+  σ_A_sq = $(round(NaN   ,3))   squared: $(round(σ_A_sq,3)) 
   σ_B    = $(round(σ_B   ,3)) squared: $(round(σ_B.^2,3))
-  γ_0    = $(round(γ_0   ,3))
-  γ_1    = $(round(γ_1   ,3))
-  γ_3    = $(round(γ_3   ,3))
 
-  ρ_ηθ   = $(round(ρ_ηθ  ,3)) # using ρ_ηθ_0 
+  ρ_ηθ   = $(round(ρ_ηθ_0  ,3)) # using ρ_ηθ_0 
 
-  σ_0    = $(round(σ_0   ,3)) squared: $(round(σ_0.^2,3))
-  σ_1    = $(round(σ_1   ,3)) squared: $(round(σ_1.^2,3))
-  α_c    = $(round(α_c   ,3))
-  σ_c    = $(round(σ_c   ,3)) # normalize σ_c =1
+    σ_0    = $(round(σ_0_ρ0   ,3)) squared: $(round(σ_0.^2,3))
+    σ_1    = $(round(σ_1_ρ0   ,3)) squared: $(round(σ_1.^2,3))
+    α_c    = $(round(α_c_ρ0   ,3))
+
+  ρ_ηθ   = $(round(ρ_ηθ_1  ,3)) # using ρ_ηθ_1
+
+    σ_0    = $(round(σ_0_ρ1   ,3)) squared: $(round(σ_0.^2,3))
+    σ_1    = $(round(σ_1_ρ1   ,3)) squared: $(round(σ_1.^2,3))
+    α_c    = $(round(α_c_ρ1   ,3))
+
+  With normalization σ_c =1:
+  σ_c    = $(round(σ_c   ,3)) # normalize 
+    γ_0    = $(round(γ_0   ,3))
+    γ_1    = $(round(γ_1   ,3))
+    γ_3    = $(round(γ_3   ,3))
 
   Incidental parameters
-  σ_star = $(round(σ_star,3))
-  ρ_ηθ_0 = $(round(ρ_ηθ_0,3))  
-  ρ_ηθ_1 = $(round(ρ_ηθ_1,3))")
+  σ_star = $(round(σ_star,3))")
 
 
 
