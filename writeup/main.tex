@@ -131,7 +131,22 @@ where
 \qquad\text{and} \qquad
 \rho_{\eta\theta} = \frac{(\alpha_1 - \alpha_0 - \alpha_c)\sigma^2_\theta}{\sigma^{*}\sigma_\theta}
 \]
-Letting $t \equiv -(\widetilde \delta + \widetilde \beta x - \gamma_2 z)/\sigma^* $, we can now write
+
+\subsubsection{Step 1}
+
+We know that $S=1 \Leftrightarrow \eta \geq -(\widetilde \delta + \widetilde \beta X - \widetilde \gamma Z) + \eta \geq 0$. So, in the first step of the procedure, we estimate
+\begin{align*}
+\Pr[S=1|\F] 
+&= 1 - \Phi\left[\overbrace{\frac{\delta_1  - \delta_0 - \gamma_0}{\sigma^*}}^{\widetilde \delta} + \overbrace{\frac{\beta_1 - \beta_0 - \gamma_3}{\sigma^*}}^{\widetilde \beta} X - \overbrace{\frac{\gamma_2}{\sigma^*}}^{\widetilde \gamma} Z 
+\right] \\
+&= 1- \Phi\left[\widetilde \delta + \widetilde \beta X - \widetilde\gamma_2 Z 
+\right] 
+\end{align*}
+This gives us $\left\{ \widetilde \delta, \widetilde \beta, \widetilde \gamma \right\}$.
+
+\subsection{Step 2}
+
+Letting $t \equiv -(\widetilde \delta + \widetilde \beta X - \widetilde \gamma Z)$, we can now write
 \begin{align*}
 E[y_0 | x,z,s=1] 
 &= \delta_0 + \beta_0 x + \alpha_0 \frac{(\alpha_1 - \alpha_0 - \alpha_c)\sigma^2_\theta}{\sigma^*} \overbrace{\frac{-\phi(t)}{\Phi(t)}}^{\lambda_0} \\
@@ -140,34 +155,67 @@ E[y_1 | x,z,s=1]
 &= \delta_1 + \beta_1 x + \alpha_1 \frac{(\alpha_1 - \alpha_0 - \alpha_c)\sigma^2_\theta}{\sigma^*} \underbrace{\frac{\phi(t)}{1-\Phi(t)}}_{\lambda_1} \\
 &= \delta_1 + \beta_1 x + \alpha_1 \left( \rho_{\eta\theta}\sigma_\theta \right) \lambda_{1i} \\
 \end{align*}
-A probit first-step has given us $\left\{ (\delta_1 - \delta_0 -\gamma_0)/\sigma_c, (\beta_1 - \beta_0 - \gamma_3)\sigma_c), \gamma_2/\sigma_c \right\}$. With the second step, we now get $\{\delta_1, \delta_0, \beta_1, \beta_0\}$ and the ratio $\alpha_1/\alpha_0$. \sout{We can back out $\{\gamma_0/\sigma_c, \gamma_2/\sigma_c, \gamma_3/\sigma_c\}$ from the original probit equations. We also get the quantity $(\alpha_1 - \alpha_0 - \alpha_c)\sigma^2_\theta$ since we have $\sigma_c^2$.} However, we have 3 $\alpha$s and only 2 equations for them, so those aren't identified. \textbf{If we normalized $\alpha_c = 1$, then we would identify $\gamma$s for sure... but not clear if we need to do this.} We can now turn to variances and covariances. Recall
-\[
-\rho_{\eta\theta}\sigma_\theta = \frac{(\alpha_1 - \alpha_0 - \alpha_c)\sigma^2_\theta}{\sqrt{(\alpha_1 - \alpha_0 - \alpha_c)^2\sigma^2_\theta + \sigma^2_c}}
-\]
-It is clear to see that these are of little help since we have a bunch of parameters in the euqations for the variances: 
+
+This gives us estimates for $\left\{ \delta_0, \delta_1, \beta_0, \beta_1, (\alpha_0\rho_{\eta\zeta}\sigma_\theta), (\alpha_1\rho_{\eta\zeta}\sigma_\theta) \right\}$
+
+\subsection{Step 3}
+
+Now we can use the covariances. We have
 \begin{align*}
-\Var (Y_0| \eta  <  -t ) 
-	&= \alpha_0^2 \Var\left(\theta\middle| \eta <    t\right) + \sigma^2_0  \\
-	&= \alpha_0^2 \left( \rho_{\eta\theta}\sigma_\theta \right)^2 \left[1 - t \lambda_0 - \lambda_0^2 \right] + \sigma^2_\theta \left( 1- \rho_{\eta\theta}^2\right) + \sigma^2_0\\
-%	&= \alpha_0^2 \frac{(\alpha_1 - \alpha_0 - \alpha_c)\sigma^2_\theta}{\sqrt{(\alpha_1 - \alpha_0 - \alpha_c)^2\sigma_\theta^2 + \sigma_0^2}} + \sigma_\theta^2 \left(1 - \frac{(\alpha_1 - \alpha_0 - \alpha_c)^2\sigma^4_\theta}{\sigma_0^2 \left[(\alpha_1 - \alpha_0 - \alpha_c)^2\sigma_\theta^2 + \sigma_0^2 \right]} \right) \\
-\Var (Y_1| \eta\geq -t ) &= \alpha_1^2 \Var\left(\theta\middle| \eta \geq t\right) + \sigma^2_1 
+\Cov(Y_0 - \delta_0 - \beta_0 X,\; M^A - \beta_A X^M) &= \Cov(Y_0, M^A | X, X^M, Z) &= \alpha_0 \sigma^2_\theta \\
+\Cov(Y_0 - \delta_0 - \beta_0 X,\; M^B - \beta_B X^M) &= \Cov(Y_0, M^B | X, X^M, Z) &= \alpha_0 \alpha_B \sigma^2_\theta \\
+\Cov(Y_1 - \delta_1 - \beta_1 X,\; M^A - \beta_A X^M) &= \Cov(Y_1, M^A | X, X^M, Z) &= \alpha_1 \sigma^2_\theta \\
+\Cov(Y_1 - \delta_1 - \beta_1 X,\; M^B - \beta_B X^M) &= \Cov(Y_1, M^B | X, X^M, Z) &= \alpha_1 \alpha_B \sigma^2_\theta \\
+\Cov(M^A - \beta_A X^M         ,\; M^B - \beta_B X^M) &= \Cov(M^A, M^B | X^M      ) &= \alpha_B \sigma^2_\theta
 \end{align*}
-Fortunately, with the measurement equations, we can say things. Recall $I=E[Y_1 - Y_0 - C|X,Z,\theta]$. If we had an estimate of $I$, we would be in business... and when we do EM/MLE, we do get an estimate of $I$ (right). \textbf{Previously: ``I have no idea what to do with the last 2 eqns b/c how do we compute $I$ w/ out $\theta$ This is maybe why we need MLE and EM??''}
-\begin{align}
-\Cov(Y_0 - \beta_0 X, M^A - X^M\beta_A) &= \alpha_0 \sigma^2_\theta \\
-\Cov(Y_0 - \beta_0 X, M^B - X^M\beta_B) &= \alpha_0 \alpha_B \sigma^2_\theta \\
-\Cov(Y_1 - \beta_1 X, M^A - X^M\beta_A) &= \alpha_1 \sigma^2_\theta \\
-\Cov(Y_1 - \beta_1 X, M^B - X^M\beta_B) &= \alpha_1 \alpha_B \sigma^2_\theta \\
-\Cov\left[I - \widetilde \delta - \widetilde \beta x -\gamma_2 z,\; \left(M^A - X^M\beta_A \right)\right]
-	&= (\alpha_1 - \alpha_0 - \alpha_c) \sigma^2_\theta \\
-\Cov\left[I - \widetilde \delta - \widetilde \beta x -\gamma_2 z,\; \left(M^B - X^M\beta_B \right)\right]
-	&= (\alpha_1 - \alpha_0 - \alpha_c) \alpha_B \sigma^2_\theta \\
-\Cov\left[I - \widetilde \delta - \widetilde \beta x -\gamma_2 z,\; \left(Y_0 - X\beta_0 \right)\right] 
-	&= (\alpha_1 - \alpha_0 - \alpha_c) \alpha_0\sigma^2_\theta \\
-\Cov\left[I - \widetilde \delta - \widetilde \beta x -\gamma_2 z,\; \left(Y_1 - X\beta_1 \right)\right] 
-	&= (\alpha_1 - \alpha_0 - \alpha_c) \alpha_1 \sigma^2_\theta
-\end{align}
-The top four equations give us two measurements for $\alpha_B$. The bottom four plus knowledge of $(\alpha_1 - \alpha_0 - \alpha_c)\sigma^2_\theta$ from the two-step gives us $\alpha_0$ and $\alpha_1$ (just divide them). With $\alpha_k$s in hand plus $\alpha_B$ give us multiple measurements for $\sigma^2_\theta$. We plug these in to the variances for $\Var(Y_k|X,Z,s=k)$ and get $\sigma_k^2$. Done.
+We use these covariances to identify the rest of the model. 
+\begin{align*}
+\widehat{\alpha_0 / \alpha_1} &= (\alpha_0\rho\sigma^2_\theta)/(\alpha_0\rho\sigma^2_\theta) \\
+\widehat \alpha_B &= \Cov(Y_0, M^B)/\Cov(Y_0, M^A)  \\
+\widehat \sigma^2_\theta &= \Cov(M^A, M^B)/\widehat \alpha_B  \\
+\widehat \alpha_0 &= \Cov(Y_0, M^A)  \\
+\widehat \alpha_1 &= \Cov(Y_1, M^B)  \\
+\widehat \sigma^2_A &= \Var(M^A) - \sigma^2_\theta  \\
+\widehat \sigma^2_B  &= \Var(M^B) - \widehat \alpha_B^2 \widehat \sigma^2_\theta  \\
+\widehat \rho &= \widehat{ \alpha_0 (\rho\sigma_\theta)} / (\widehat \alpha_0 \sqrt{\widehat \sigma_\theta^2})  \\
+              &= \widehat{ \alpha_1 (\rho\sigma_\theta)} / (\widehat \alpha_1 \sqrt{\widehat \sigma_\theta^2})  \\
+\widehat \sigma_0^2 &= \Var(Y_0) - \widehat{ \alpha_0 (\rho\sigma_\theta)}^2\left[ 1 - t\widehat \lambda_0 + \widehat \lambda_0^2 \right] - \widehat \sigma^2_\theta(1-\widehat \rho^2) \\
+\widehat \sigma_1^2 &= \Var(Y_1) - \widehat{ \alpha_1 (\rho\sigma_\theta)}^2\left[ 1 - t\widehat \lambda_1 + \widehat \lambda_1^2 \right] - \widehat \sigma^2_\theta(1-\widehat \rho^2) \\
+\widehat \alpha_c &= \left\{ \alpha_c \in R \middle | (\widehat \rho \widehat \sigma_\theta) - (\widehat \alpha_1 - \widehat \alpha_0 - \alpha_c)\widehat \sigma^2_\theta \left[(\widehat \alpha_1 - \widehat \alpha_0 - \alpha_c)^2 \widehat \sigma_\theta^2 + 1 \right]^{-1/2} =0 \right\} \\
+\widehat \gamma_0 &= \left( \widehat \delta_1 -\widehat \delta_0 \right) - \widehat{\widetilde{\delta}} \times \widehat{\sigma^*} \\
+\widehat \gamma_3 &= \left( \widehat \beta_1 - \widehat\beta_0 \right) - \widehat{\widetilde{\beta}} \times \widehat {\sigma^*} \\
+\widehat \gamma_2 &= \widehat{\widetilde \gamma}\times \widehat{\sigma^*}
+\end{align*}
+
+%
+%A probit first-step has given us $\left\{ (\delta_1 - \delta_0 -\gamma_0)/\sigma_c, (\beta_1 - \beta_0 - \gamma_3)\sigma_c), \gamma_2/\sigma_c \right\}$. With the second step, we now get $\{\delta_1, \delta_0, \beta_1, \beta_0\}$ and the ratio $\alpha_1/\alpha_0$. \sout{We can back out $\{\gamma_0/\sigma_c, \gamma_2/\sigma_c, \gamma_3/\sigma_c\}$ from the original probit equations. We also get the quantity $(\alpha_1 - \alpha_0 - \alpha_c)\sigma^2_\theta$ since we have $\sigma_c^2$.} However, we have 3 $\alpha$s and only 2 equations for them, so those aren't identified. \textbf{If we normalized $\alpha_c = 1$, then we would identify $\gamma$s for sure... but not clear if we need to do this.} We can now turn to variances and covariances. Recall
+%\[
+%\rho_{\eta\theta}\sigma_\theta = \frac{(\alpha_1 - \alpha_0 - \alpha_c)\sigma^2_\theta}{\sqrt{(\alpha_1 - \alpha_0 - \alpha_c)^2\sigma^2_\theta + \sigma^2_c}}
+%\]
+%It is clear to see that these are of little help since we have a bunch of parameters in the euqations for the variances: 
+%\begin{align*}
+%\Var (Y_0| \eta  <  -t ) 
+%	&= \alpha_0^2 \Var\left(\theta\middle| \eta <    t\right) + \sigma^2_0  \\
+%	&= \alpha_0^2 \left( \rho_{\eta\theta}\sigma_\theta \right)^2 \left[1 - t \lambda_0 - \lambda_0^2 \right] + \sigma^2_\theta \left( 1- \rho_{\eta\theta}^2\right) + \sigma^2_0\\
+%%	&= \alpha_0^2 \frac{(\alpha_1 - \alpha_0 - \alpha_c)\sigma^2_\theta}{\sqrt{(\alpha_1 - \alpha_0 - \alpha_c)^2\sigma_\theta^2 + \sigma_0^2}} + \sigma_\theta^2 \left(1 - \frac{(\alpha_1 - \alpha_0 - \alpha_c)^2\sigma^4_\theta}{\sigma_0^2 \left[(\alpha_1 - \alpha_0 - \alpha_c)^2\sigma_\theta^2 + \sigma_0^2 \right]} \right) \\
+%\Var (Y_1| \eta\geq -t ) &= \alpha_1^2 \Var\left(\theta\middle| \eta \geq t\right) + \sigma^2_1 
+%\end{align*}
+%Fortunately, with the measurement equations, we can say things. Recall $I=E[Y_1 - Y_0 - C|X,Z,\theta]$. If we had an estimate of $I$, we would be in business... and when we do EM/MLE, we do get an estimate of $I$ (right). \textbf{Previously: ``I have no idea what to do with the last 2 eqns b/c how do we compute $I$ w/ out $\theta$ This is maybe why we need MLE and EM??''}
+%\begin{align}
+%\Cov(Y_0 - \beta_0 X, M^A - X^M\beta_A) &= \alpha_0 \sigma^2_\theta \\
+%\Cov(Y_0 - \beta_0 X, M^B - X^M\beta_B) &= \alpha_0 \alpha_B \sigma^2_\theta \\
+%\Cov(Y_1 - \beta_1 X, M^A - X^M\beta_A) &= \alpha_1 \sigma^2_\theta \\
+%\Cov(Y_1 - \beta_1 X, M^B - X^M\beta_B) &= \alpha_1 \alpha_B \sigma^2_\theta \\
+%\Cov\left[I - \widetilde \delta - \widetilde \beta x -\gamma_2 z,\; \left(M^A - X^M\beta_A \right)\right]
+%	&= (\alpha_1 - \alpha_0 - \alpha_c) \sigma^2_\theta \\
+%\Cov\left[I - \widetilde \delta - \widetilde \beta x -\gamma_2 z,\; \left(M^B - X^M\beta_B \right)\right]
+%	&= (\alpha_1 - \alpha_0 - \alpha_c) \alpha_B \sigma^2_\theta \\
+%\Cov\left[I - \widetilde \delta - \widetilde \beta x -\gamma_2 z,\; \left(Y_0 - X\beta_0 \right)\right] 
+%	&= (\alpha_1 - \alpha_0 - \alpha_c) \alpha_0\sigma^2_\theta \\
+%\Cov\left[I - \widetilde \delta - \widetilde \beta x -\gamma_2 z,\; \left(Y_1 - X\beta_1 \right)\right] 
+%	&= (\alpha_1 - \alpha_0 - \alpha_c) \alpha_1 \sigma^2_\theta
+%\end{align}
+%The top four equations give us two measurements for $\alpha_B$. The bottom four plus knowledge of $(\alpha_1 - \alpha_0 - \alpha_c)\sigma^2_\theta$ from the two-step gives us $\alpha_0$ and $\alpha_1$ (just divide them). With $\alpha_k$s in hand plus $\alpha_B$ give us multiple measurements for $\sigma^2_\theta$. We plug these in to the variances for $\Var(Y_k|X,Z,s=k)$ and get $\sigma_k^2$. Done.
 
 \subsection{MLE approach}
 
