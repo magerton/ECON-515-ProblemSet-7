@@ -4,7 +4,7 @@ using Optim
 using Dates
 using Roots
 
-doLog = true
+doLog = false
 originalSTDOUT = STDOUT
 
 if doLog == true 
@@ -267,6 +267,30 @@ println("Cov of outcome and measurements from two-step
     cov_0_B = $(round(cov_0_B, 2))
     cov_1_A = $(round(cov_1_A, 2))
     cov_1_B = $(round(cov_1_B, 2)) \n")
+
+
+println("Final Parameters
+  α_B    = $(round(α_B   ,3))
+  σ_θ    = $(round(σ_θ   ,3))
+  α_1    = $(round(α_1   ,3))
+  α_0    = $(round(α_0   ,3))
+  σ_A_sq = $(round(σ_A_sq,3)) squared: $(round(NaN,3)) 
+  σ_B    = $(round(σ_B   ,3)) squared: $(round(σ_B.^2,3))
+  γ_0    = $(round(γ_0   ,3))
+  γ_1    = $(round(γ_1   ,3))
+  γ_3    = $(round(γ_3   ,3))
+
+  ρ_ηθ   = $(round(ρ_ηθ  ,3)) # using ρ_ηθ_0 
+
+  σ_0    = $(round(σ_0   ,3)) squared: $(round(σ_0.^2,3))
+  σ_1    = $(round(σ_1   ,3)) squared: $(round(σ_1.^2,3))
+  α_c    = $(round(α_c   ,3))
+  σ_c    = $(round(σ_c   ,3)) # normalize σ_c =1
+
+  Incidental parameters
+  σ_star = $(round(σ_star,3))
+  ρ_ηθ_0 = $(round(ρ_ηθ_0,3))  
+  ρ_ηθ_1 = $(round(ρ_ηθ_1,3))")
 
 
 
