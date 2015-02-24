@@ -2,6 +2,7 @@ using DataFrames
 using Distributions
 using Optim
 using Dates
+using Roots
 
 doLog = true
 originalSTDOUT = STDOUT
@@ -31,7 +32,7 @@ end
 ######### Basic Parameters
 ###################################################
 dir = "C:/Users/Nick/SkyDrive/One_data/LaborEcon/PS7/"
-dir = "C:/mja3/SkyDrive/Rice/Class/econ515-Labor/PS7/"
+# dir = "C:/mja3/SkyDrive/Rice/Class/econ515-Labor/PS7/"
 fs  = "data_ps7_spring2015.raw"
 
 cd(dir)
@@ -126,6 +127,7 @@ param_probit_pval = probit_res["pvals"]
 
 t = -(X*param_probit)
 λ_0 = -normpdf(t)./normcdf(t)
+λ_1 = normpdf(t)./(1-normcdf(t))
 
 
 # Y_0
@@ -137,14 +139,14 @@ se_ρ_0 = sqrt(diag(VCV_ρ_0))
 
 # Y_1
 Y1 = convert(Array,data[sel1,:Y])
-X1 = [vec(data[sel1,:C]) vec(data[sel1,:X]) λ_0[sel1] ]
+X1 = [vec(data[sel1,:C]) vec(data[sel1,:X]) λ_1[sel1] ]
 
 (ρ_1,~,VCV_ρ_1) = least_sq(X1,Y1)
 se_ρ_1 = sqrt(diag(VCV_ρ_1))
 
 # publish params
+δ_0    = ρ_0[1]
 β_0    = ρ_0[2]    
-δ_0    = ρ_0[1]    
 π_0    = ρ_0[3]    
 δ_0_se = se_ρ_0[1] 
 β_0_se = se_ρ_0[2] 
@@ -195,12 +197,70 @@ M_A1_Xβ = convert(Array,data[sel1,:M_a])
     - vec(data[sel1,:X_m]).*β_A 
 M_B1_Xβ = convert(Array,data[sel1,:M_b]) 
     - vec(data[sel1,:X_m]).*β_B 
-
+M_A_Xβ = convert(Array,data[:M_a]) 
+    - vec(data[:X_m]).*β_A 
+M_B_Xβ = convert(Array,data[:M_b]) 
+    - vec(data[:X_m]).*β_B 
 
 cov_0_A = (1/N_0)*sum(Y_0_Xβ'*M_A0_Xβ)
 cov_0_B = (1/N_0)*sum(Y_0_Xβ'*M_B0_Xβ)
 cov_1_A = (1/N_1)*sum(Y_1_Xβ'*M_A1_Xβ)
 cov_1_B = (1/N_1)*sum(Y_1_Xβ'*M_A1_Xβ)
+cov_A_B = (1/N)*sum(M_A_Xβ'*M_B_Xβ)
+
+α_B = cov_0_B/cov_0_A
+σ_θ = sqrt(cov_A_B/α_B)
+α_1 = cov_1_A/(σ_θ^2)
+α_0 = cov_0_A/(σ_θ^2)
+
+# σ_A = sqrt( var(convert(Array,data[:M_a])) - σ_θ^2  )
+#########################################################
+σ_A_sq =  var(convert(Array,data[:M_a])) - σ_θ^2  ### < NEGATIVE VARIANCE
+σ_B = sqrt(  var(convert(Array,data[:M_b])) -α_B^2*σ_θ^2  )
+
+
+
+ρ_ηθ_0 = π_0 / (α_0*σ_θ)
+ρ_ηθ_1 = π_1 / (α_1*σ_θ)
+########################################################
+ρ_ηθ   = ρ_ηθ_0 # ρ_ηθ_1  #### < NOT THE SAME NUMEBR
+
+δ_t_0 = λ_0[sel0]'*(λ_0[sel0] - t[sel0])
+σ_0 = sqrt( 
+    var(convert(Array,data[sel0,:Y])) - α_0^2.*(ρ_ηθ*σ_θ)^2*
+    (1 -δ_t_0) - σ_θ^2*(1-ρ_ηθ^2)
+  ) # variance on income. Large
+
+δ_t_1 = λ_1[sel1]'*(λ_1[sel1] - t[sel1])
+σ_1 = sqrt( 
+    var(convert(Array,data[sel1,:Y])) - α_1^2.*(ρ_ηθ*σ_θ)^2*
+    (1 -δ_t_1) - σ_θ^2*(1-ρ_ηθ^2)
+  ) # variance on income. Large
+
+f_c(α_c) = ρ_ηθ*σ_θ - (α_1 - α_0 - α_c)*σ_θ^2*(
+  (α_1 - α_0 - α_c)^2*σ_θ^2 + 1)^(-.5)
+α_c = fzero(f_c, -1000, 1000)
+
+# normalize σ_c =1
+σ_c = 1
+
+σ_star = sqrt( (α_1 - α_0 - α_c)^2*σ_θ^2 + σ_c^2)
+
+
+γ_0 = δ_1 - δ_0 - param_probit[1]*σ_star
+γ_1 = β_1 - β_0 - param_probit[2]*σ_star
+γ_3 = param_probit[3]*σ_star
+
+# these are wrong b/c ignore variance of σ_star
+# (b/c it looks hard)
+V(kk) =[VCV_ρ_1[kk]     0           0;
+    0         VCV_ρ_0[kk]       0;
+    0              0     VCV_probit[kk]]
+γ_0_se = [1 -1 -1]*V(1)*[1 -1 -1]'
+γ_1_se = [1 -1 -1]*V(2)*[1 -1 -1]'
+γ_3_se = [0  0  1]*V(3)*[0  0  1]'
+
+
 
 println("Cov of outcome and measurements from two-step
     cov_0_A = $(round(cov_0_A, 2))
@@ -208,90 +268,93 @@ println("Cov of outcome and measurements from two-step
     cov_1_A = $(round(cov_1_A, 2))
     cov_1_B = $(round(cov_1_B, 2)) \n")
 
-###################################################
-######### EM algorithm
-###################################################
 
 
-include("./HG_wts.jl")
 
-σ_θ = 1
-initials = ones(18)
-initials[1:4] = [ρ_0[1] ρ_1[1] ρ_0[2] ρ_1[2]]
-opt_out = []
+# ###################################################
+# ######### EM algorithm
+# ###################################################
 
-println("Doing EM!\n")
 
-# Loop w/ "while (abs( opt_out.f_minimum - opt_out_old.f_minimum  ) > ftol) || (count < maxit) " ?
-for i = 1:5
+# include("./HG_wts.jl")
+
+# σ_θ = 1
+# initials = ones(18)
+# initials[1:4] = [ρ_0[1] ρ_1[1] ρ_0[2] ρ_1[2]]
+# opt_out = []
+
+# println("Doing EM!\n")
+
+# # Loop w/ "while (abs( opt_out.f_minimum - opt_out_old.f_minimum  ) > ftol) || (count < maxit) " ?
+# for i = 1:5
   
-  global count = 0
-  println("\n ----------Update $i: σ_θ = $(σ_θ) --------------\n\n")
+#   global count = 0
+#   println("\n ----------Update $i: σ_θ = $(σ_θ) --------------\n\n")
   
-  opt_out = Optim.optimize(wtd_LL,vec(initials),
-      xtol = 1e-32,
-      ftol = 1e-32,
-      grtol = 1e-14,
-      iterations = 500,
-      autodiff=true)
+#   opt_out = Optim.optimize(wtd_LL,vec(initials),
+#       xtol = 1e-32,
+#       ftol = 1e-32,
+#       grtol = 1e-14,
+#       iterations = 500,
+#       autodiff=true)
 
-  initials = opt_out.minimum
+#   initials = opt_out.minimum
 
-  println("\nResults: \t $opt_out \n\n")
+#   println("\nResults: \t $opt_out \n\n")
 
-  update = unpackparams(opt_out.minimum)
-  δ_0 = update["δ_0"]
-  δ_1 = update["δ_1"]
-  β_0 = update["β_0"]
-  β_1 = update["β_1"]
-  α_0 = update["α_0"]
-  α_1 = update["α_1"]
-  α_C = update["α_C"]
-  β_A = update["β_A"]
-  α_B = update["α_B"]
-  β_B = update["β_B"]
+#   update = unpackparams(opt_out.minimum)
+#   δ_0 = update["δ_0"]
+#   δ_1 = update["δ_1"]
+#   β_0 = update["β_0"]
+#   β_1 = update["β_1"]
+#   α_0 = update["α_0"]
+#   α_1 = update["α_1"]
+#   α_C = update["α_C"]
+#   β_A = update["β_A"]
+#   α_B = update["α_B"]
+#   β_B = update["β_B"]
 
-  Y0        = convert(Array,data[sel0,:Y])
-  X0        = [vec(data[sel0,:C]) vec(data[sel0,:X])]
-  Y1        = convert(Array,data[sel1,:Y])
-  X1        = [vec(data[sel1,:C]) vec(data[sel1,:X])]
+#   Y0        = convert(Array,data[sel0,:Y])
+#   X0        = [vec(data[sel0,:C]) vec(data[sel0,:X])]
+#   Y1        = convert(Array,data[sel1,:Y])
+#   X1        = [vec(data[sel1,:C]) vec(data[sel1,:X])]
 
-  # Form an updated estimate for θ_hat
-  θ_hat = zeros(N)
-  θ_A = data[:M_a]  - data[:X_m] .* β_A
-  θ_B = (data[:M_b] - data[:X_m] .* β_B)./α_B
-  θ_hat[sel1] = (1/3).* ( θ_A[sel1] + θ_B[sel1] +
-          ( (Y1 - X1*[δ_1; β_1])  )./α_1 )
-  θ_hat[sel0] = (1/3).* ( θ_A[sel0] + θ_B[sel0] +
-          ( (Y0 - X0*[δ_0; β_0])  )./α_0 )
-  σ_θ = var(θ_hat)
+#   # Form an updated estimate for θ_hat
+#   θ_hat = zeros(N)
+#   θ_A = data[:M_a]  - data[:X_m] .* β_A
+#   θ_B = (data[:M_b] - data[:X_m] .* β_B)./α_B
+#   θ_hat[sel1] = (1/3).* ( θ_A[sel1] + θ_B[sel1] +
+#           ( (Y1 - X1*[δ_1; β_1])  )./α_1 )
+#   θ_hat[sel0] = (1/3).* ( θ_A[sel0] + θ_B[sel0] +
+#           ( (Y0 - X0*[δ_0; β_0])  )./α_0 )
+#   σ_θ = sqrt(var(θ_hat))
 
-println("\t
-  δ_0 = $(round(opt_out.minimum[1]  , 2))
-  δ_1 = $(round(opt_out.minimum[2]  , 2))
-  β_0 = $(round(opt_out.minimum[3]  , 2))
-  β_1 = $(round(opt_out.minimum[4]  , 2))
+# println("\t
+#   δ_0 = $(round(opt_out.minimum[1]  , 2))
+#   δ_1 = $(round(opt_out.minimum[2]  , 2))
+#   β_0 = $(round(opt_out.minimum[3]  , 2))
+#   β_1 = $(round(opt_out.minimum[4]  , 2))
 
-  γ_0 = $(round(opt_out.minimum[5]  , 2))
-  γ_2 = $(round(opt_out.minimum[6]  , 2))
-  γ_3 = $(round(opt_out.minimum[7]  , 2))
+#   γ_0 = $(round(opt_out.minimum[5]  , 2))
+#   γ_2 = $(round(opt_out.minimum[6]  , 2))
+#   γ_3 = $(round(opt_out.minimum[7]  , 2))
 
-  α_0 = $(round(opt_out.minimum[8]  , 2))
-  α_1 = $(round(opt_out.minimum[9]  , 2))
-  α_C = $(round(opt_out.minimum[10] , 2))
+#   α_0 = $(round(opt_out.minimum[8]  , 2))
+#   α_1 = $(round(opt_out.minimum[9]  , 2))
+#   α_C = $(round(opt_out.minimum[10] , 2))
 
-  σ_C = $(round(opt_out.minimum[11] , 2))
-  σ_1 = $(round(opt_out.minimum[12] , 2))
-  σ_2 = $(round(opt_out.minimum[13] , 2))
+#   σ_C = $(round(opt_out.minimum[11] , 2))
+#   σ_1 = $(round(opt_out.minimum[12] , 2))
+#   σ_2 = $(round(opt_out.minimum[13] , 2))
 
-  α_A = 1 (normalized)
-  β_A = $(round(opt_out.minimum[14] , 2))
-  σ_A = $(round(opt_out.minimum[15] , 2))
-  α_B = $(round(opt_out.minimum[16] , 2))
-  β_B = $(round(opt_out.minimum[17] , 2))
-  σ_B = $(round(opt_out.minimum[18] , 2))")
+#   α_A = 1 (normalized)
+#   β_A = $(round(opt_out.minimum[14] , 2))
+#   σ_A = $(round(opt_out.minimum[15] , 2))
+#   α_B = $(round(opt_out.minimum[16] , 2))
+#   β_B = $(round(opt_out.minimum[17] , 2))
+#   σ_B = $(round(opt_out.minimum[18] , 2))")
 
-end
+# end
 
 
 if doLog == true
